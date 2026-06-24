@@ -36,3 +36,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+  // FAQアコーディオンの開閉処理
+  const accordionHeaders = document.querySelectorAll('.accordion-header');
+  accordionHeaders.forEach(header => {
+    header.addEventListener('click', () => {
+      header.classList.toggle('is-active');
+      const content = header.nextElementSibling;
+      if (content.classList.contains('is-open')) {
+        content.classList.remove('is-open');
+      } else {
+        content.classList.add('is-open');
+      }
+    });
+  });

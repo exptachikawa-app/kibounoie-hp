@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="生活介護 希望の家への見学予約やお問い合わせはこちらから。">
+  <title>お問い合わせ | 生活介護 希望の家 | 社会福祉法人SHIP</title>
+  <!-- Google Fonts: Rubik & Noto Sans JP -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="header" id="js-header">
+    <div class="header-inner">
+      <div class="header-logo">
+        <a href="index.html">生活介護 希望の家</a>
+      </div>
+      <nav class="gnav" id="js-gnav">
+        <ul class="gnav-list">
+          <li class="gnav-item"><a href="about.html">希望の家について</a></li>
+          <li class="gnav-item"><a href="service.html">サービス内容</a></li>
+          <li class="gnav-item"><a href="facility.html">施設のご案内</a></li>
+          <li class="gnav-item"><a href="guide.html">ご利用案内</a></li>
+          <li class="gnav-item"><a href="activities.html">活動の様子</a></li>
+          <li class="gnav-item"><a href="news.html">お知らせ</a></li>
+          <li class="gnav-item"><a href="faq.html">よくある質問</a></li>
+          <li class="gnav-item"><a href="access.html">アクセス</a></li>
+        </ul>
+        <div class="header-contact-sp">
+          <a href="contact.html" class="btn btn-contact">見学・お問い合わせ</a>
+        </div>
+      </nav>
+      <div class="header-contact-pc">
+        <a href="contact.html" class="btn btn-contact">見学・お問い合わせ</a>
+      </div>
+      <button class="hamburger" id="js-hamburger" aria-label="メニューを開閉する" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+  <main>
+    <!-- パンくずリスト -->
+    <div class="breadcrumb">
+      <div class="container">
+        <ul>
+          <li><a href="index.html">ホーム</a></li>
+          <li>&gt;</li>
+          <li>お問い合わせ</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ページヘッダー -->
+    <section class="page-header bg-light">
+      <div class="container">
+        <h1 class="page-title">お問い合わせ</h1>
+      </div>
+    </section>
+
+
+    <section class="section contact">
+      <div class="container">
+        <div class="content-box">
+          <p class="text-center" style="margin-bottom: 40px;">見学のご予約、ご利用についてのご相談など、お気軽にお問い合わせください。</p>
+          
+          <div class="contact-methods">
+            <div class="contact-method-item">
+              <h3>お電話でのお問い合わせ</h3>
+              <p class="tel-number">000-000-0000</p>
+              <p class="note">受付時間：月〜金 9:00〜17:00<br>（※電話番号は準備中／要確認）</p>
+            </div>
+          </div>
+
+          <h3 class="form-title" style="margin-top: 60px; text-align: center; color: var(--color-main);">お問い合わせフォーム</h3>
+          <!-- プレースホルダとしてのフォームUI -->
+          <form class="contact-form" action="#" method="POST">
+            <p class="note" style="text-align: center; margin-bottom: 24px;">※現在フォームは準備中です。本番環境ではGoogleフォーム等の外部サービスを埋め込むか、送信プログラムと連携します。</p>
+            <div class="form-group">
+              <label for="name">お名前 <span class="required">必須</span></label>
+              <input type="text" id="name" name="name" placeholder="例：山田 太郎" required>
+            </div>
+            <div class="form-group">
+              <label for="email">メールアドレス <span class="required">必須</span></label>
+              <input type="email" id="email" name="email" placeholder="例：info@example.com" required>
+            </div>
+            <div class="form-group">
+              <label for="tel">電話番号</label>
+              <input type="tel" id="tel" name="tel" placeholder="例：000-000-0000">
+            </div>
+            <div class="form-group">
+              <label for="category">お問い合わせ種別</label>
+              <select id="category" name="category">
+                <option value="">選択してください</option>
+                <option value="見学について">見学について</option>
+                <option value="利用に関するご相談">利用に関するご相談</option>
+                <option value="採用について">採用について</option>
+                <option value="その他">その他</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="message">お問い合わせ内容 <span class="required">必須</span></label>
+              <textarea id="message" name="message" rows="6" placeholder="お問い合わせ内容をご入力ください" required></textarea>
+            </div>
+            <div class="btn-wrap">
+              <button type="button" class="btn btn-contact btn-lg">送信する</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+        
+
+  <!-- ========================
+       見学・お問い合わせ CTA
+  ======================== -->
+  <section class="section cta">
+    <div class="container">
+      <div class="cta-inner">
+        <h2 class="cta-title">見学・ご相談を随時受け付けています</h2>
+        <p class="cta-text">「どんな雰囲気なのか見てみたい」「利用について相談したい」など、まずはお気軽にお問い合わせください。</p>
+        <a href="contact.html" class="btn btn-contact btn-lg">見学・お問い合わせはこちら</a>
+        <p class="cta-tel">お電話でも承ります：<br class="sp-only"><a href="tel:0000000000">000-000-0000</a><br><span class="tel-note">（※電話番号は準備中／要確認）</span></p>
+      </div>
+    </div>
+  </section>
+  </main>
+
+  <!-- ========================
+       共通フッター
+  ======================== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-info">
+          <div class="footer-logo">生活介護 希望の家</div>
+          <p class="footer-address">〒190-0164 東京都あきる野市五日市374-5</p>
+          <p class="footer-tel">TEL: 000-000-0000<br><span class="tel-note">（※準備中／要確認）</span></p>
+        </div>
+        <div class="footer-links">
+          <ul class="footer-nav">
+            <li><a href="about.html">希望の家について</a></li>
+            <li><a href="service.html">サービス内容</a></li>
+            <li><a href="facility.html">施設のご案内</a></li>
+            <li><a href="guide.html">ご利用案内</a></li>
+          </ul>
+          <ul class="footer-nav">
+            <li><a href="activities.html">活動の様子</a></li>
+            <li><a href="news.html">お知らせ</a></li>
+            <li><a href="faq.html">よくある質問</a></li>
+            <li><a href="access.html">アクセス</a></li>
+            <li><a href="contact.html">お問い合わせ</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-bottom-links">
+          <a href="https://www.swsc-ship.com/" target="_blank" rel="noopener noreferrer">運営法人 社会福祉法人SHIP 公式サイト <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-left: 2px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>
+          <a href="privacy.html">個人情報保護方針</a>
+        </div>
+        <p class="copyright">&copy; 生活介護 希望の家 All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
