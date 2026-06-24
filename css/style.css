@@ -1147,3 +1147,64 @@ button {
   padding-bottom: 8px;
   border-bottom: 1px solid var(--color-border);
 }
+/* Split Layout (Alternating Image & Text) */
+.split-layout {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  margin-bottom: 60px;
+}
+.split-layout.reverse {
+  flex-direction: row-reverse;
+}
+.split-image {
+  flex: 1;
+}
+.split-image img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  object-fit: cover;
+  aspect-ratio: 16 / 9;
+}
+.split-text {
+  flex: 1;
+}
+@media screen and (max-width: 768px) {
+  .split-layout, .split-layout.reverse {
+    flex-direction: column;
+    gap: 24px;
+  }
+}
+
+/* 2x2 Grid for Service Page */
+.features-grid-2x2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(24px, 3vw, 40px);
+}
+.features-grid-2x2 .feature-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+}
+.features-grid-2x2 .feature-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.features-grid-2x2 .feature-card .feature-content {
+  padding: 24px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+@media screen and (max-width: 768px) {
+  .features-grid-2x2 {
+    grid-template-columns: 1fr;
+  }
+}
