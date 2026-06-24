@@ -230,14 +230,17 @@ button {
 .gnav-list {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: clamp(12px, 1.5vw, 24px);
 }
 
 .gnav-item a {
   color: var(--color-text);
   font-weight: 400;
-  font-size: 0.95rem;
+  font-size: clamp(13px, 1.1vw, 15px);
+  white-space: nowrap;
   position: relative;
+  display: block;
+  padding: 4px 0;
 }
 
 .gnav-item a:hover {
@@ -313,18 +316,20 @@ button {
 }
 
 .hero-title {
-  font-size: 3.5rem;
+  font-size: clamp(2rem, 5vw, 3.5rem);
   font-weight: 700;
   color: var(--color-main);
   line-height: 1.3;
   margin-bottom: 24px;
   letter-spacing: 0.02em;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.9), 0 0 10px rgba(255, 255, 255, 0.6);
 }
 
 .hero-text {
-  font-size: 1.25rem;
+  font-size: clamp(1rem, 2vw, 1.25rem);
   color: var(--color-text);
   margin-bottom: 40px;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.9);
 }
 
 /* ==========================================================================
