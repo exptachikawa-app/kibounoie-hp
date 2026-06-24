@@ -209,17 +209,22 @@ button {
   align-items: center;
   justify-content: space-between;
   height: 100%;
-  padding: 0 40px;
+  padding: 0 clamp(20px, 3vw, 40px);
   max-width: 1440px;
   margin: 0 auto;
 }
 
+.header-logo {
+  flex-shrink: 0;
+}
+
 .header-logo a {
-  font-size: 1.5rem;
+  font-size: clamp(1.1rem, 1.5vw, 1.5rem);
   font-weight: 700;
   color: var(--color-main);
   text-decoration: none;
   letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 
 .gnav {
@@ -230,7 +235,7 @@ button {
 .gnav-list {
   display: flex;
   align-items: center;
-  gap: clamp(12px, 1.5vw, 24px);
+  gap: clamp(10px, 1.2vw, 24px);
 }
 
 .gnav-item a {
@@ -263,7 +268,8 @@ button {
 }
 
 .header-contact-pc {
-  margin-left: 32px;
+  margin-left: clamp(16px, 2vw, 32px);
+  flex-shrink: 0;
 }
 .header-contact-sp {
   display: none;
