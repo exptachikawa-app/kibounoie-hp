@@ -89,3 +89,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     startSlideShow();
   }
+
+  // スクロールアニメーション
+  const fadeElements = document.querySelectorAll('.js-fade-up');
+  if (fadeElements.length > 0) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -50px 0px' });
+    
+    fadeElements.forEach(el => observer.observe(el));
+  }

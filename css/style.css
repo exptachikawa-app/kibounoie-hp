@@ -5,6 +5,9 @@
    ========================================================================== */
 :root {
   --color-main: #4bb8e3;
+  --color-main-text: #1a759c;
+  --color-main-button: #1a759c;
+  --color-sub-text: #d98505;
   --color-sub: #f5a623;
   --color-base: #ffffff;
   --color-text: #333333;
@@ -23,6 +26,29 @@
   
   --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+
+/* ==========================================================================
+   Accessibility
+   ========================================================================== */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #000;
+  color: white;
+  padding: 8px;
+  z-index: 10000;
+  transition: top 0.2s ease;
+}
+.skip-link:focus {
+  top: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-sub);
+  outline-offset: 2px;
 }
 
 /* ==========================================================================
@@ -57,7 +83,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 a {
-  color: var(--color-main);
+  color: var(--color-main-text);
   text-decoration: none;
   transition: all 0.3s ease;
 }
@@ -102,7 +128,7 @@ button {
   text-align: center;
   font-size: 2rem;
   margin-bottom: 40px;
-  color: var(--color-main);
+  color: var(--color-main-text);
   position: relative;
   padding-bottom: 16px;
 }
@@ -144,18 +170,18 @@ button {
 
 .btn-contact {
   background-color: var(--color-sub);
-  color: var(--color-base);
+  color: var(--color-text);
   box-shadow: var(--shadow-sm);
 }
 .btn-contact:hover {
   background-color: #e0961d;
-  color: var(--color-base);
+  color: var(--color-text);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
 .btn-hero {
-  background-color: var(--color-main);
+  background-color: var(--color-main-button);
   color: var(--color-base);
   font-size: 1.125rem;
   padding: 16px 48px;
@@ -170,11 +196,11 @@ button {
 
 .btn-outline {
   background-color: transparent;
-  color: var(--color-main);
+  color: var(--color-main-text);
   border: 2px solid var(--color-main);
 }
 .btn-outline:hover {
-  background-color: var(--color-main);
+  background-color: var(--color-main-text);
   color: var(--color-base);
 }
 
@@ -221,7 +247,7 @@ button {
 .header-logo a {
   font-size: clamp(1.1rem, 1.5vw, 1.5rem);
   font-weight: 700;
-  color: var(--color-main);
+  color: var(--color-main-text);
   text-decoration: none;
   letter-spacing: 0.05em;
   white-space: nowrap;
@@ -249,7 +275,7 @@ button {
 }
 
 .gnav-item a:hover {
-  color: var(--color-main);
+  color: var(--color-main-text);
 }
 
 .gnav-item a::after {
@@ -259,7 +285,7 @@ button {
   left: 0;
   width: 0;
   height: 2px;
-  background-color: var(--color-main);
+  background-color: var(--color-main-text);
   transition: width 0.3s ease;
 }
 
@@ -349,7 +375,7 @@ button {
   padding: 0;
 }
 .hero-dot.is-active {
-  background-color: var(--color-main);
+  background-color: var(--color-main-text);
   border-color: #fff;
   transform: scale(1.2);
 }
@@ -396,7 +422,7 @@ button {
 .intro-lead {
   font-size: 1.5rem;
   font-weight: 500;
-  color: var(--color-main);
+  color: var(--color-main-text);
   margin-bottom: 24px;
 }
 
@@ -428,13 +454,13 @@ button {
   width: 64px;
   height: 64px;
   margin: 0 auto 24px;
-  color: var(--color-main);
+  color: var(--color-main-text);
 }
 
 .feature-title {
   font-size: 1.25rem;
   margin-bottom: 16px;
-  color: var(--color-main);
+  color: var(--color-main-text);
 }
 
 .feature-text {
@@ -478,7 +504,7 @@ button {
   top: 0;
   width: 42px;
   height: 42px;
-  background-color: var(--color-main);
+  background-color: var(--color-main-text);
   color: var(--color-base);
   border-radius: 50%;
   display: flex;
@@ -501,7 +527,7 @@ button {
 .timeline-title {
   font-size: 1.125rem;
   margin-bottom: 8px;
-  color: var(--color-main);
+  color: var(--color-main-text);
 }
 
 /* ==========================================================================
@@ -560,6 +586,7 @@ button {
   align-items: center;
   gap: 16px;
   min-width: 200px;
+  min-height: 44px;
 }
 
 .news-meta time {
@@ -569,7 +596,7 @@ button {
 
 .news-category {
   background-color: #e5f4fa;
-  color: var(--color-main);
+  color: var(--color-main-text);
   padding: 4px 12px;
   border-radius: 4px;
   font-size: 0.85rem;
@@ -599,7 +626,7 @@ button {
 
 .cta-title {
   font-size: 2rem;
-  color: var(--color-sub);
+  color: var(--color-sub-text);
   margin-bottom: 16px;
 }
 
@@ -644,7 +671,7 @@ button {
 
 .access-name {
   font-size: 1.5rem;
-  color: var(--color-main);
+  color: var(--color-main-text);
   margin-bottom: 16px;
 }
 
@@ -809,7 +836,7 @@ button {
     left: 0;
     width: 100%;
     height: 2px;
-    background-color: var(--color-main);
+    background-color: var(--color-main-text);
     transition: all 0.3s ease;
   }
   
@@ -976,7 +1003,7 @@ button {
   color: var(--color-muted);
 }
 .breadcrumb a:hover {
-  color: var(--color-main);
+  color: var(--color-main-text);
   text-decoration: underline;
 }
 @media screen and (max-width: 768px) {
@@ -992,7 +1019,7 @@ button {
 }
 .page-title {
   font-size: clamp(1.75rem, 4vw, 2.5rem);
-  color: var(--color-main);
+  color: var(--color-main-text);
   font-weight: 700;
 }
 
@@ -1026,7 +1053,7 @@ button {
 }
 .mission-item h3 {
   font-size: 1.5rem;
-  color: var(--color-main);
+  color: var(--color-main-text);
   margin-bottom: 16px;
 }
 @media screen and (max-width: 768px) {
@@ -1051,7 +1078,7 @@ button {
 .step-num {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--color-sub);
+  color: var(--color-sub-text);
   margin-bottom: 8px;
 }
 .step-item h3 {
@@ -1116,7 +1143,7 @@ button {
   align-items: center;
 }
 .accordion-header:hover {
-  color: var(--color-main);
+  color: var(--color-main-text);
 }
 .accordion-header .icon {
   position: relative;
@@ -1126,7 +1153,7 @@ button {
 .accordion-header .icon::before, .accordion-header .icon::after {
   content: '';
   position: absolute;
-  background-color: var(--color-main);
+  background-color: var(--color-main-text);
   transition: transform 0.3s ease;
 }
 .accordion-header .icon::before { top: 7px; left: 0; width: 16px; height: 2px; }
@@ -1181,14 +1208,14 @@ button {
 }
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
   outline: none;
-  border-color: var(--color-main);
+  border-color: var(--color-main-text);
   box-shadow: 0 0 0 2px rgba(75,184,227,0.2);
 }
 
 /* Privacy Page */
 .privacy-title {
   font-size: 1.25rem;
-  color: var(--color-main);
+  color: var(--color-main-text);
   margin: 32px 0 16px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--color-border);
@@ -1252,5 +1279,26 @@ button {
 @media screen and (max-width: 768px) {
   .features-grid-2x2 {
     grid-template-columns: 1fr;
+  }
+}
+
+.contact-input:focus, .contact-textarea:focus {
+  border-color: var(--color-main-text);
+  box-shadow: 0 0 0 4px rgba(26, 117, 156, 0.1);
+  outline: none;
+}
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  .js-fade-up {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+  .js-fade-up.is-visible {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
