@@ -161,9 +161,10 @@ button {
   color: var(--color-base);
   font-weight: 500;
   letter-spacing: 0.05em;
-  transition: transform 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
   box-shadow: var(--shadow-sm);
   border: none;
+  min-height: 44px;
 }
 
 .btn-contact {
@@ -302,9 +303,11 @@ button {
    Hero Section
    ========================================================================== */
 .hero {
-  padding-top: var(--header-height-sp);
   height: clamp(560px, 82vh, 760px);
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Hero Slider */
@@ -373,11 +376,9 @@ button {
 .hero-content {
   position: relative;
   z-index: 10;
+  padding: 0 4vw;
+  text-align: center;
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 clamp(20px, 4vw, 40px);
-  text-align: left;
 }
 
 .hero-title {
@@ -392,8 +393,8 @@ button {
 
 .hero-text {
   font-size: clamp(16px, 2vw, 18px) !important;
-  margin-top: 32px !important;
-  margin-bottom: 40px;
+  margin-top: 40px !important;
+  margin-bottom: 56px;
   line-height: 1.9 !important;
   text-shadow: 0 1px 5px rgba(0,0,0,0.2);
   font-weight: 500;
@@ -421,8 +422,8 @@ button {
    ========================================================================== */
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: clamp(24px, 3vw, 40px);
 }
 
 .feature-card {
@@ -432,6 +433,7 @@ button {
   background: var(--color-base);
   overflow: hidden;
   border: none;
+  padding: clamp(32px, 4vw, 48px) !important;
 }
 
 .feature-card:hover {
@@ -778,8 +780,10 @@ button {
   color: var(--color-base);
 }
   .features-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: clamp(24px, 3vw, 40px);
+}
   .gallery-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -917,16 +921,19 @@ button {
   color: var(--color-base);
   font-weight: 500;
   letter-spacing: 0.05em;
-  transition: transform 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
   box-shadow: var(--shadow-sm);
   border: none;
+  min-height: 44px;
 }
 
   /* Hero */
   .hero {
-  padding-top: var(--header-height-sp);
   height: clamp(560px, 82vh, 760px);
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
   
   .hero::before {
@@ -941,9 +948,12 @@ button {
 }
 
   .hero-content {
-    padding: 0 20px;
-    text-align: center;
-  }
+  position: relative;
+  z-index: 10;
+  padding: 0 4vw;
+  text-align: center;
+  width: 100%;
+}
 
   .hero-title {
   font-family: var(--font-family-serif);
@@ -957,8 +967,8 @@ button {
 
   .hero-text {
   font-size: clamp(16px, 2vw, 18px) !important;
-  margin-top: 32px !important;
-  margin-bottom: 40px;
+  margin-top: 40px !important;
+  margin-bottom: 56px;
   line-height: 1.9 !important;
   text-shadow: 0 1px 5px rgba(0,0,0,0.2);
   font-weight: 500;
@@ -967,8 +977,10 @@ button {
 
   /* Features */
   .features-grid {
-    grid-template-columns: 1fr;
-  }
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: clamp(24px, 3vw, 40px);
+}
   
   /* News */
   .news-item a {
@@ -1300,6 +1312,7 @@ button {
   background: var(--color-base);
   overflow: hidden;
   border: none;
+  padding: clamp(32px, 4vw, 48px) !important;
 }
 .features-grid-2x2 .feature-card img {
   width: 100%;
@@ -1308,7 +1321,7 @@ button {
   border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 .features-grid-2x2 .feature-card .feature-content {
-  padding: 48px !important;
+  padding: 0 !important;
 }
 @media screen and (max-width: 768px) {
   .features-grid-2x2 {
@@ -1328,7 +1341,7 @@ button {
 @media (prefers-reduced-motion: no-preference) {
   .js-fade-up {
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(12px);
   transition: opacity 0.6s ease-out, transform 0.6s ease-out;
 }
   .js-fade-up.is-visible {
@@ -1408,13 +1421,14 @@ button {
   background: var(--color-base);
   overflow: hidden;
   border: none;
+  padding: clamp(32px, 4vw, 48px) !important;
 }
 .feature-card:hover {
   transform: translateY(-4px) !important;
   box-shadow: 0 16px 50px rgba(210,120,40,0.12) !important;
 }
 .feature-content {
-  padding: 48px !important;
+  padding: 0 !important;
 }
 
 /* Hero Overhaul */
@@ -1422,6 +1436,8 @@ button {
   position: relative;
   z-index: 10;
   padding: 0 4vw;
+  text-align: center;
+  width: 100%;
 }
 .hero-title {
   font-family: var(--font-family-serif);
@@ -1434,8 +1450,8 @@ button {
 }
 .hero-text {
   font-size: clamp(16px, 2vw, 18px) !important;
-  margin-top: 32px !important;
-  margin-bottom: 40px;
+  margin-top: 40px !important;
+  margin-bottom: 56px;
   line-height: 1.9 !important;
   text-shadow: 0 1px 5px rgba(0,0,0,0.2);
   font-weight: 500;
@@ -1443,7 +1459,7 @@ button {
 }
 @keyframes kenBurns {
   0% { transform: scale(1); }
-  100% { transform: scale(1.06); }
+  100% { transform: scale(1.05); }
 }
 .hero-slide.is-active img {
   animation: kenBurns 8s infinite alternate ease-in-out;
@@ -1506,9 +1522,10 @@ button {
   color: var(--color-base);
   font-weight: 500;
   letter-spacing: 0.05em;
-  transition: transform 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
   box-shadow: var(--shadow-sm);
   border: none;
+  min-height: 44px;
 }
 .btn:hover {
   background-color: #b95506;
@@ -1529,3 +1546,11 @@ button {
   padding: 20px 48px;
   font-size: 1.125rem;
 }
+
+section {
+  scroll-margin-top: var(--header-height-pc);
+}
+
+.features-grid .feature-card:nth-child(1) { transition-delay: 0s; }
+.features-grid .feature-card:nth-child(2) { transition-delay: 0.08s; }
+.features-grid .feature-card:nth-child(3) { transition-delay: 0.16s; }
