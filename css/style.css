@@ -483,14 +483,14 @@ button {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 20px;
+  left: 27px;
   width: 2px;
   background-color: #d8eef7;
 }
 
 .timeline-item {
   position: relative;
-  padding-left: 60px;
+  padding-left: 80px;
   margin-bottom: 40px;
 }
 
@@ -502,8 +502,8 @@ button {
   position: absolute;
   left: 0;
   top: 0;
-  width: 42px;
-  height: 42px;
+  width: 56px;
+  height: 56px;
   background-color: var(--color-main-dark);
   color: var(--color-base);
   border-radius: 50%;
@@ -511,7 +511,7 @@ button {
   align-items: center;
   justify-content: center;
   font-weight: 500;
-  font-size: 0.85rem;
+  font-size: clamp(0.75rem, 2vw, 0.9rem);
   box-shadow: 0 0 0 4px var(--color-base);
   z-index: 1;
 }
