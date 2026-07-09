@@ -71,15 +71,16 @@
           <div class="contact-methods">
             <div class="contact-method-item">
               <h3>お電話でのお問い合わせ</h3>
-              <p class="tel-number">042-595-2324</p>
+              <p class="tel-number"><a href="tel:0425952324">042-595-2324</a></p>
               <p class="note">受付時間：月〜金 8:30〜17:30</p>
             </div>
           </div>
 
           <h3 class="form-title" style="margin-top: 60px; text-align: center; color: var(--color-main);">お問い合わせフォーム</h3>
           <!-- プレースホルダとしてのフォームUI -->
-          <form class="contact-form" action="#" method="POST">
-            <p class="note" style="text-align: center; margin-bottom: 24px;">※現在フォームは準備中です。本番環境ではGoogleフォーム等の外部サービスを埋め込むか、送信プログラムと連携します。</p>
+          <!-- TODO: GoogleフォームまたはFormspreeのURLを設定 -->
+          <form class="contact-form" action="YOUR_FORM_ENDPOINT_HERE" method="POST">
+            
             <div class="form-group">
               <label for="name">お名前 <span class="required">必須</span></label>
               <input type="text" id="name" name="name" placeholder="例：山田 太郎" required>
@@ -107,7 +108,7 @@
               <textarea id="message" name="message" rows="6" placeholder="お問い合わせ内容をご入力ください" required></textarea>
             </div>
             <div class="btn-wrap">
-              <button type="button" class="btn btn-contact btn-lg">送信する</button>
+              <button type="submit" class="btn btn-contact btn-lg">送信する</button>
             </div>
           </form>
         </div>
