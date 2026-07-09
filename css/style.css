@@ -308,6 +308,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-top: var(--header-height-pc);
 }
 
 /* Hero Slider */
@@ -934,6 +935,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-top: var(--header-height-sp);
 }
   
   .hero::before {
