@@ -1578,3 +1578,37 @@ section {
 .reasons-grid .feature-card:nth-child(2) { transition-delay: 0.08s; }
 .reasons-grid .feature-card:nth-child(3) { transition-delay: 0.16s; }
 .reasons-grid .feature-card:nth-child(4) { transition-delay: 0.24s; }
+
+/* ========================
+   Logo Images
+======================== */
+.header-logo-img {
+  max-height: 40px;
+  width: auto;
+  vertical-align: middle;
+}
+
+@media (min-width: 768px) {
+  .header-logo-img {
+    max-height: 50px;
+  }
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.footer-logo-img {
+  max-height: 60px;
+  width: auto;
+  vertical-align: middle;
+}
+.footer-logo a {
+  display: block;
+  transition: opacity 0.3s;
+}
+.footer-logo a:hover {
+  opacity: 0.8;
+}

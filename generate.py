@@ -3,7 +3,7 @@ import os
 header = """  <header class="header" id="js-header">
     <div class="header-inner">
       <div class="header-logo">
-        <a href="index.html">生活介護 希望の家</a>
+        <a href="index.html" class="logo-link"><img src="images/logo-kibounoie.png" alt="生活介護 希望の家" class="header-logo-img"></a>
       </div>
       <nav class="gnav" id="js-gnav">
         <ul class="gnav-list">
@@ -53,7 +53,7 @@ footer = """  <!-- ========================
     <div class="container">
       <div class="footer-top">
         <div class="footer-info">
-          <div class="footer-logo">生活介護 希望の家</div>
+          <div class="footer-logo"><a href="index.html"><img src="images/logo-kibounoie.png" alt="生活介護 希望の家" class="footer-logo-img"></a></div>
           <p class="footer-address">〒190-0164 東京都あきる野市五日市374-5</p>
           <p class="footer-tel">TEL: 000-000-0000<br><span class="tel-note">（※準備中／要確認）</span></p>
         </div>
