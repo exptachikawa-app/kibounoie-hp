@@ -1695,13 +1695,6 @@ section {
   .lightbox-close { top: -35px; right: 10px; }
   .lightbox-image { max-width: 95vw; max-height: 80vh; }
 }
-.lightbox-caption {
-  color: #fff;
-  text-align: center;
-  margin-top: 10px;
-  font-size: 1rem;
-}
-
 /* Lightbox triggers inside gallery-grid */
 .gallery-grid .lightbox-trigger {
   background: none;
@@ -1773,4 +1766,28 @@ section {
     grid-template-columns: 1fr;
     gap: 20px;
   }
+}
+
+button.gallery-item {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+button.gallery-item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+button.gallery-item:hover img {
+  transform: scale(1.02);
+}
+button.gallery-item:focus-visible {
+  outline: 3px solid var(--color-main-deep, #005a9e);
+  outline-offset: 4px;
 }

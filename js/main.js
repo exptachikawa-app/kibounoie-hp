@@ -105,28 +105,46 @@ document.addEventListener('DOMContentLoaded', () => {
     fadeElements.forEach(el => observer.observe(el));
   }
 
+
 // Lightbox Logic
 document.addEventListener('DOMContentLoaded', () => {
   const triggers = document.querySelectorAll('.lightbox-trigger');
   if (triggers.length === 0) return;
   
-  const lightbox = document.getElementById('lightbox');
-  if(!lightbox) return;
+  // Generate Lightbox HTML if it doesn't exist
+  let lightbox = document.getElementById('lightbox');
+  if (!lightbox) {
+    const lightboxHtml = `
+      <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="活動写真の拡大表示" hidden>
+        <div class="lightbox-overlay" id="lightboxOverlay"></div>
+        <div class="lightbox-content-wrapper">
+          <button type="button" class="lightbox-close" id="lightboxClose" aria-label="閉じる">×</button>
+          <div class="lightbox-img-container">
+            <button type="button" class="lightbox-prev" id="lightboxPrev" aria-label="前の画像">‹</button>
+            <img id="lightboxImg" class="lightbox-image" src="" alt="">
+            <button type="button" class="lightbox-next" id="lightboxNext" aria-label="次の画像">›</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', lightboxHtml);
+    lightbox = document.getElementById('lightbox');
+  }
 
   const overlay = document.getElementById('lightboxOverlay');
   const closeBtn = document.getElementById('lightboxClose');
   const prevBtn = document.getElementById('lightboxPrev');
   const nextBtn = document.getElementById('lightboxNext');
   const imgElement = document.getElementById('lightboxImg');
-  const captionElement = document.getElementById('lightboxCaption');
   
   let currentIndex = 0;
   let lastFocusedElement = null;
 
   const images = Array.from(triggers).map(trigger => {
+    const thumbnail = trigger.querySelector('img');
     return {
-      src: trigger.querySelector('img').src,
-      caption: trigger.getAttribute('data-caption')
+      src: thumbnail.src,
+      alt: thumbnail.alt
     };
   });
 
@@ -149,8 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const updateLightbox = () => {
     imgElement.src = images[currentIndex].src;
-    imgElement.alt = images[currentIndex].caption;
-    captionElement.textContent = images[currentIndex].caption;
+    imgElement.alt = images[currentIndex].alt;
   };
 
   const showNext = () => {
