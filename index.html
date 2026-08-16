@@ -55,20 +55,27 @@
     <!-- ========================
          メインビジュアル
     ======================== -->
-        <section class="hero static-hero js-fade-up">
-      <div class="container hero-container">
-        <div class="hero-text-block">
-          <h1 class="hero-title">一人ひとりの<br>「自分らしい」を<br>大切に。</h1>
-          <p class="hero-text text-measure">あきる野市の緑豊かな環境で、<br>安心できる生活介護サービスを提供しています。</p>
-          <div class="btn-wrap align-left">
-            <a href="contact.html" class="btn btn-hero">見学のお問い合わせ</a>
-          </div>
+    <section class="hero">
+      <div class="hero-slider" id="js-hero-slider">
+        <div class="hero-slide is-active">
+          <img src="images/photo-facility-exterior.jpg" alt="希望の家の建物外観" width="800" height="533">
         </div>
-        <div class="hero-collage">
-          <div class="collage-main"><img src="images/photo-facility-exterior.jpg" alt="希望の家の建物外観" loading="eager"></div>
-          <div class="collage-sub1"><img src="images/photo-creative-support-water.jpg" alt="職員と利用者が共同で創作活動に取り組む様子" loading="eager"></div>
-          <div class="collage-sub2"><img src="images/photo-group-exercise.jpg" alt="椅子に座って集団体操を行う様子" loading="eager"></div>
+        <div class="hero-slide">
+          <img src="images/photo-creative-support-water.jpg" alt="職員と利用者が共同で創作活動に取り組む様子" width="800" height="533">
         </div>
+        <div class="hero-slide">
+          <img src="images/photo-group-exercise.jpg" alt="椅子に座って集団体操を行う様子" width="800" height="533">
+        </div>
+      </div>
+      <div class="hero-dots" id="js-hero-dots">
+        <button class="hero-dot is-active" aria-label="スライド1へ"></button>
+        <button class="hero-dot" aria-label="スライド2へ"></button>
+        <button class="hero-dot" aria-label="スライド3へ"></button>
+      </div>
+      <div class="hero-content">
+        <h1 class="hero-title">一人ひとりの<br>「自分らしい」を<br>大切に。</h1>
+        <p class="hero-text">あきる野市の緑豊かな環境で、<br>安心できる生活介護サービスを提供しています。</p>
+        <a href="contact.html" class="btn btn-hero">見学のお問い合わせ</a>
       </div>
     </section>
 
@@ -79,8 +86,8 @@
       <div class="container">
         <div class="intro-content">
           <div class="section-header"><span class="section-label">Concept</span><h2 class="section-title">希望の家について</h2></div>
-          <div class="about-value-layout">
-            <div class="about-value-text" style="text-align: left;">
+          <div class="zigzag-row">
+            <div class="zigzag-text" style="text-align: left;">
               <h3 style="font-size: clamp(24px, 3vw, 32px); color: var(--color-main-dark); margin-bottom: 24px; font-family: var(--font-family-serif);">一人ひとりの『自分らしい』を大切に。</h3>
               <p style="line-height: 1.8;">
                 「生活介護 希望の家」は、社会福祉法人SHIPが運営する生活介護事業所です。<br>
@@ -91,7 +98,7 @@
                 <a href="about.html" class="btn btn-outline">希望の家について詳しく見る</a>
               </div>
             </div>
-            <div class="about-value-img">
+            <div class="zigzag-img">
               <img src="images/photo-facility-entrance.jpg" alt="希望の家の入口" loading="lazy" width="800" height="533">
             </div>
           </div>
@@ -107,7 +114,7 @@
         <div class="section-header"><span class="section-label">Reasons</span><h2 class="section-title">希望の家が選ばれる理由</h2></div>
         <div class="reasons-grid">
           
-          <div class="feature-item js-fade-up">
+          <div class="feature-card js-fade-up">
             <div class="feature-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
             </div>
@@ -115,7 +122,7 @@
             <p class="feature-text">「人員配置体制加算1.5:1」の手厚い体制で、一人ひとりに丁寧に向き合います。無理のないスケジュールで、ご本人のペースや体調に合わせたきめ細やかな支援を大切にしています。</p>
           </div>
           
-          <div class="feature-item js-fade-up">
+          <div class="feature-card js-fade-up">
             <div class="feature-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
             </div>
@@ -123,7 +130,7 @@
             <p class="feature-text">看護師が常駐し、日々の健康状態の確認を行っています。加えて、公認心理師・社会福祉士・精神保健福祉士・介護福祉士などの有資格の専門職が在籍し、多角的な視点でご本人とご家族を支えます。</p>
           </div>
 
-          <div class="feature-item js-fade-up">
+          <div class="feature-card js-fade-up">
             <div class="feature-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 0-10 10c0 5.523 4.477 10 10 10a1 1 0 0 0 1-1v-1.126c0-.528.21-1.036.586-1.409l1.414-1.414A2 2 0 0 1 16.414 17H22a2 2 0 0 0 2-2c0-5.523-4.477-10-10-10z"></path><circle cx="7" cy="11" r="1"></circle><circle cx="11" cy="7" r="1"></circle><circle cx="16" cy="9" r="1"></circle></svg>
             </div>
@@ -131,7 +138,7 @@
             <p class="feature-text">アート活動、軽作業、園芸などの創作・生産活動をはじめ、曜日ごとに音楽・運動など多様なプログラムを用意しています。外部講師を招いた活動も行い、「やりたい」「できた」を広げます。</p>
           </div>
 
-          <div class="feature-item js-fade-up">
+          <div class="feature-card js-fade-up">
             <div class="feature-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
             </div>
@@ -262,7 +269,7 @@
   ======================== -->
   <footer class="footer">
     <div class="container">
-            <div class="footer-inner">
+            <div class="footer-top">
         <div class="footer-info">
           <div class="footer-logo"><a href="index.html"><img src="images/logo-kibounoie.png" alt="生活介護 希望の家" class="footer-logo-img"></a></div>
           <p class="footer-address">
