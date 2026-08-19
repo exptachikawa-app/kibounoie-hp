@@ -355,6 +355,13 @@ test('Frontend: contact.html DOM structure, form elements, and main.js contract'
   // data-sitekey must not be empty
   assert.strictEqual(content.includes('data-sitekey=""'), false, 'data-sitekey must not be empty');
 
+  // data-action must be strictly 'contact' and not empty
+  assert.ok(content.includes('data-action="contact"'), 'data-action="contact" must be present');
+  assert.strictEqual(content.includes('data-action=""'), false, 'data-action must not be empty');
+  const actionMatch = content.match(/data-action="([^"]*)"/);
+  assert.ok(actionMatch, 'data-action attribute must exist');
+  assert.strictEqual(actionMatch[1], 'contact', 'data-action must be strictly "contact"');
+
   // Cloudflare official test/dummy Site Keys must not appear in production HTML
   const testSiteKeys = [
     '1x00000000000000000000AA',
@@ -431,4 +438,8 @@ test('Frontend: Validation contract alignment between Frontend, Worker, and GAS'
   assert.match(contactHtml, /<input\s+type="checkbox"\s+id="consent"\s+name="consent"\s+required>/);
   assert.ok(workerSrc.includes('!consent'), 'Worker must require consent === true');
   assert.ok(gasSrc.includes('consent !== true'), 'GAS must require consent === true');
+
+  // 5. Turnstile action contract: HTML specifies data-action="contact", Worker requires turnstileOutcome.action !== 'contact'
+  assert.match(contactHtml, /class="cf-turnstile"[^>]*data-action="contact"/);
+  assert.ok(workerSrc.includes("turnstileOutcome.action !== 'contact'"), 'Worker must strictly require action === contact');
 });
