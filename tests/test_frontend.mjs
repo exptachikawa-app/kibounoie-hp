@@ -349,6 +349,36 @@ test('Frontend: contact.html DOM structure, form elements, and main.js contract'
   // Turnstile widget
   assert.ok(content.includes('class="cf-turnstile"'));
 
+  // Production Turnstile Site Key: must be the actual production key
+  assert.ok(content.includes('data-sitekey="0x4AAAAAAEVpC137nrp1x62K"'), 'Production Site Key must be present');
+
+  // data-sitekey must not be empty
+  assert.strictEqual(content.includes('data-sitekey=""'), false, 'data-sitekey must not be empty');
+
+  // Cloudflare official test/dummy Site Keys must not appear in production HTML
+  const testSiteKeys = [
+    '1x00000000000000000000AA',
+    '2x00000000000000000000AB',
+    '1x00000000000000000000BB',
+    '2x00000000000000000000BB',
+    '3x00000000000000000000FF',
+  ];
+  for (const testKey of testSiteKeys) {
+    assert.strictEqual(content.includes(testKey), false, `Test Site Key ${testKey} must not be in production HTML`);
+  }
+
+  // Placeholder patterns must not appear
+  const placeholders = ['YOUR_SITE_KEY', 'TURNSTILE_SITE_KEY', '{SITE_KEY}', '<SITE_KEY>'];
+  for (const ph of placeholders) {
+    assert.strictEqual(content.includes(ph), false, `Placeholder '${ph}' must not be in production HTML`);
+  }
+
+  // data-sitekey value must not contain angle brackets
+  const sitekeyMatch = content.match(/data-sitekey="([^"]*)"/);
+  assert.ok(sitekeyMatch, 'data-sitekey attribute must exist');
+  assert.strictEqual(sitekeyMatch[1].includes('<'), false, 'Site Key must not contain <');
+  assert.strictEqual(sitekeyMatch[1].includes('>'), false, 'Site Key must not contain >');
+
   // Buttons & Messages
   assert.ok(content.includes('id="submitBtn"'));
   assert.ok(content.includes('id="form-error-message"'));
