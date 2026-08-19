@@ -238,3 +238,126 @@ test('Frontend: Missing Crypto API displays error, restores button state, preven
     globalThis.crypto = originalCrypto;
   }
 });
+
+test('Frontend: contact.html UTF-8 encoding, Japanese integrity, and mojibake prevention', () => {
+  const contactHtmlPath = 'public/contact.html';
+  assert.ok(fs.existsSync(contactHtmlPath), 'public/contact.html must exist');
+
+  const content = fs.readFileSync(contactHtmlPath, 'utf8');
+
+  // 1. U+FFFD check
+  assert.strictEqual(content.includes('\uFFFD'), false, 'public/contact.html must not contain U+FFFD');
+
+  // 2. Required Japanese strings
+  const requiredStrings = [
+    'お問い合わせ',
+    '本文へスキップ',
+    '希望の家について',
+    'サービス内容',
+    '施設のご案内',
+    'ご利用案内',
+    '活動の様子',
+    'よくある質問',
+    'アクセス',
+    '見学・お問い合わせ',
+    'お電話でのお問い合わせ',
+    'お問い合わせフォーム',
+    'お名前',
+    'メールアドレス',
+    '電話番号',
+    'お問い合わせ種別',
+    'お問い合わせ内容',
+    '必須',
+    '個人情報保護方針',
+    '送信する'
+  ];
+
+  for (const str of requiredStrings) {
+    assert.ok(content.includes(str), `public/contact.html must include '${str}'`);
+  }
+
+  // 3. Title & description
+  assert.ok(content.includes('<title>お問い合わせ | 生活介護 希望の家 | 社会福祉法人SHIP</title>'));
+  assert.ok(content.includes('<meta name="description" content="生活介護 希望の家への見学予約やお問い合わせはこちらから。">'));
+  assert.ok(content.includes('<meta charset="UTF-8">'));
+  assert.ok(content.includes('<html lang="ja">'));
+
+  // 4. Typical mojibake patterns
+  const mojibakePatterns = [
+    /縺[^\s<>]{2,}/,
+    /繧[^\s<>]{2,}/,
+    /繝[^\s<>]{2,}/,
+    /・[a-zA-Z0-9]{2,}/
+  ];
+  for (const pat of mojibakePatterns) {
+    assert.strictEqual(pat.test(content), false, `public/contact.html must not match mojibake pattern ${pat}`);
+  }
+
+  // 5. Check all public/*.html files for U+FFFD
+  const htmlFiles = fs.readdirSync('public').filter(f => f.endsWith('.html'));
+  for (const file of htmlFiles) {
+    const p = `public/${file}`;
+    const fileContent = fs.readFileSync(p, 'utf8');
+    assert.strictEqual(fileContent.includes('\uFFFD'), false, `${p} must not contain U+FFFD`);
+  }
+});
+
+test('Frontend: contact.html DOM structure, form elements, and main.js contract', () => {
+  const content = fs.readFileSync('public/contact.html', 'utf8');
+
+  // Turnstile script
+  assert.ok(content.includes('<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>'));
+
+  // Form attributes
+  assert.ok(content.includes('id="contact-form"'));
+  assert.ok(content.includes('action="/api/contact"'));
+  assert.ok(content.includes('method="POST"'));
+
+  // Form controls & attributes
+  assert.ok(content.includes('id="name"'));
+  assert.ok(content.includes('name="name"'));
+  assert.ok(content.includes('maxlength="100"'));
+  assert.ok(content.includes('autocomplete="name"'));
+
+  assert.ok(content.includes('id="email"'));
+  assert.ok(content.includes('name="email"'));
+  assert.ok(content.includes('maxlength="254"'));
+  assert.ok(content.includes('autocomplete="email"'));
+
+  assert.ok(content.includes('id="tel"'));
+  assert.ok(content.includes('name="tel"'));
+  assert.ok(content.includes('maxlength="30"'));
+  assert.ok(content.includes('autocomplete="tel"'));
+
+  assert.ok(content.includes('id="category"'));
+  assert.ok(content.includes('name="category"'));
+  assert.ok(content.includes('value="見学について"'));
+  assert.ok(content.includes('value="利用に関するご相談"'));
+  assert.ok(content.includes('value="採用について"'));
+  assert.ok(content.includes('value="その他"'));
+
+  assert.ok(content.includes('id="message"'));
+  assert.ok(content.includes('name="message"'));
+  assert.ok(content.includes('maxlength="3000"'));
+
+  // Consent & Privacy policy link
+  assert.ok(content.includes('id="consent"'));
+  assert.ok(content.includes('name="consent"'));
+  assert.ok(content.includes('<a href="privacy.html" target="_blank" rel="noopener noreferrer">個人情報保護方針</a>'));
+
+  // Turnstile widget
+  assert.ok(content.includes('class="cf-turnstile"'));
+
+  // Buttons & Messages
+  assert.ok(content.includes('id="submitBtn"'));
+  assert.ok(content.includes('id="form-error-message"'));
+  assert.ok(content.includes('id="form-success-message"'));
+
+  // Labels matching controls
+  assert.ok(content.includes('for="name"'));
+  assert.ok(content.includes('for="email"'));
+  assert.ok(content.includes('for="tel"'));
+  assert.ok(content.includes('for="category"'));
+  assert.ok(content.includes('for="message"'));
+  assert.ok(content.includes('for="consent"'));
+});
