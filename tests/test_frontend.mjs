@@ -331,6 +331,7 @@ test('Frontend: contact.html DOM structure, form elements, and main.js contract'
 
   assert.ok(content.includes('id="category"'));
   assert.ok(content.includes('name="category"'));
+  assert.ok(content.includes('required'));
   assert.ok(content.includes('value="見学について"'));
   assert.ok(content.includes('value="利用に関するご相談"'));
   assert.ok(content.includes('value="採用について"'));
@@ -338,7 +339,7 @@ test('Frontend: contact.html DOM structure, form elements, and main.js contract'
 
   assert.ok(content.includes('id="message"'));
   assert.ok(content.includes('name="message"'));
-  assert.ok(content.includes('maxlength="3000"'));
+  assert.ok(content.includes('maxlength="2000"'));
 
   // Consent & Privacy policy link
   assert.ok(content.includes('id="consent"'));
@@ -360,4 +361,44 @@ test('Frontend: contact.html DOM structure, form elements, and main.js contract'
   assert.ok(content.includes('for="category"'));
   assert.ok(content.includes('for="message"'));
   assert.ok(content.includes('for="consent"'));
+});
+
+test('Frontend: Validation contract alignment between Frontend, Worker, and GAS', () => {
+  const contactHtml = fs.readFileSync('public/contact.html', 'utf8');
+  const workerSrc = fs.readFileSync('src/index.js', 'utf8');
+  const gasSrc = fs.readFileSync('google-apps-script/Code.gs', 'utf8');
+
+  // 1. category: required in HTML, has 必須 label, and allowed options match Worker & GAS
+  assert.match(contactHtml, /<label\s+for="category"[^>]*>[\s\S]*?お問い合わせ種別[\s\S]*?<span\s+class="required">必須<\/span>[\s\S]*?<\/label>/);
+  assert.match(contactHtml, /<select\s+id="category"\s+name="category"\s+required>/);
+
+  const expectedCategories = ['見学について', '利用に関するご相談', '採用について', 'その他'];
+  for (const cat of expectedCategories) {
+    assert.ok(contactHtml.includes(`value="${cat}"`), `HTML must contain option value '${cat}'`);
+    assert.ok(workerSrc.includes(`'${cat}'`), `Worker must contain allowed category '${cat}'`);
+    assert.ok(gasSrc.includes(`'${cat}'`), `GAS must contain allowed category '${cat}'`);
+  }
+
+  // 2. message: required, maxlength=2000 in HTML, Worker rejects > 2000, GAS rejects > 2000
+  assert.match(contactHtml, /<textarea\s+id="message"\s+name="message"[^>]*maxlength="2000"[^>]*required>/);
+  assert.ok(workerSrc.includes('message.length > 2000'), 'Worker must reject message > 2000');
+  assert.ok(gasSrc.includes('message.length > 2000'), 'GAS must reject message > 2000');
+
+  // 3. name, email, tel length limits alignment
+  assert.match(contactHtml, /<input\s+type="text"\s+id="name"\s+name="name"[^>]*maxlength="100"[^>]*required>/);
+  assert.ok(workerSrc.includes('name.length > 100'), 'Worker must enforce name length <= 100');
+  assert.ok(gasSrc.includes('name.length > 100'), 'GAS must enforce name length <= 100');
+
+  assert.match(contactHtml, /<input\s+type="email"\s+id="email"\s+name="email"[^>]*maxlength="254"[^>]*required>/);
+  assert.ok(workerSrc.includes('email.length > 254'), 'Worker must enforce email length <= 254');
+  assert.ok(gasSrc.includes('email.length > 254'), 'GAS must enforce email length <= 254');
+
+  assert.match(contactHtml, /<input\s+type="tel"\s+id="tel"\s+name="tel"[^>]*maxlength="30"/);
+  assert.ok(workerSrc.includes('tel.length > 30'), 'Worker must enforce tel length <= 30');
+  assert.ok(gasSrc.includes('tel.length > 30'), 'GAS must enforce tel length <= 30');
+
+  // 4. consent required in HTML, Worker, GAS
+  assert.match(contactHtml, /<input\s+type="checkbox"\s+id="consent"\s+name="consent"\s+required>/);
+  assert.ok(workerSrc.includes('!consent'), 'Worker must require consent === true');
+  assert.ok(gasSrc.includes('consent !== true'), 'GAS must require consent === true');
 });

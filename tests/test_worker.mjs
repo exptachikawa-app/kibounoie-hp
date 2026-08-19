@@ -88,15 +88,38 @@ after(() => {
   globalThis.fetch = originalFetch;
 });
 
+const DEFAULT_ORIGIN = 'http://127.0.0.1:8787';
+
 function createRequest(method, path, body = null, headers = {}) {
   const url = "http://localhost:8787" + path;
-  const opts = { method, headers: new Headers(headers) };
+  const reqHeaders = new Headers();
+
+  let hasExplicitOrigin = false;
+  let explicitOriginValue = null;
+
+  if (headers && typeof headers === 'object') {
+    for (const [key, value] of Object.entries(headers)) {
+      if (key.toLowerCase() === 'origin') {
+        hasExplicitOrigin = true;
+        explicitOriginValue = value;
+      } else if (value !== undefined && value !== null) {
+        reqHeaders.set(key, value);
+      }
+    }
+  }
+
+  if (hasExplicitOrigin) {
+    if (explicitOriginValue !== null && explicitOriginValue !== undefined) {
+      reqHeaders.set('Origin', explicitOriginValue);
+    }
+  } else {
+    reqHeaders.set('Origin', DEFAULT_ORIGIN);
+  }
+
+  const opts = { method, headers: reqHeaders };
   if (body !== null) {
     opts.body = body;
     if (!opts.headers.has('Content-Type')) opts.headers.set('Content-Type', 'application/json');
-  }
-  if (!opts.headers.has('Origin') && !headers.hasOwnProperty('Origin')) {
-    opts.headers.set('Origin', 'http://127.0.0.1:8787');
   }
   return new Request(url, opts);
 }
@@ -137,9 +160,11 @@ test('Routing: OPTIONS CORS preflight validation', async () => {
 
   // Missing Origin -> 403
   let reqNoOrigin = createRequest('OPTIONS', '/api/contact', null, {
+    Origin: null,
     'Access-Control-Request-Method': 'POST',
     'Access-Control-Request-Headers': 'Content-Type'
   });
+  assert.strictEqual(reqNoOrigin.headers.has('Origin'), false);
   let resNoOrigin = await worker.fetch(reqNoOrigin, defaultEnv, {});
   assert.strictEqual(resNoOrigin.status, 403);
 
@@ -355,10 +380,12 @@ test('Config: GAS Webhook URL validation', async () => {
   let reqEmpty = createRequest('POST', '/api/contact', JSON.stringify(defaultData));
   let resEmpty = await worker.fetch(reqEmpty, { ...defaultEnv, APPS_SCRIPT_WEBHOOK_URL: '' }, {});
   assert.strictEqual(resEmpty.status, 500);
+  assert.strictEqual(gasCallCount, 0);
 
   const badGasUrls = [
     'http://script.google.com/macros/s/AKfycbxyz/exec',
     'https://evil.com/macros/s/AKfycbxyz/exec',
+    'https://script.google.com.attacker.com/macros/s/AKfycbxyz/exec',
     'https://user@script.google.com/macros/s/AKfycbxyz/exec',
     'https://user:pass@script.google.com/macros/s/AKfycbxyz/exec',
     'https://script.google.com:443/macros/s/AKfycbxyz/exec',
@@ -376,6 +403,9 @@ test('Config: GAS Webhook URL validation', async () => {
     let req = createRequest('POST', '/api/contact', JSON.stringify(defaultData));
     let res = await worker.fetch(req, { ...defaultEnv, APPS_SCRIPT_WEBHOOK_URL: url }, {});
     assert.strictEqual(res.status, 500, `Failed to reject GAS URL: ${url}`);
+    const resBody = await res.json().catch(() => ({}));
+    assert.strictEqual(resBody.code, 'SERVER_CONFIG_ERROR');
+    assert.strictEqual(gasCallCount, 0);
   }
 });
 

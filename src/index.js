@@ -117,6 +117,22 @@ export default {
 
     // Validate GAS Webhook URL
     try {
+      if (/[\x00-\x1F\x7F]/.test(webhookUrlStr) || /\s/.test(webhookUrlStr)) {
+        throw new Error('Control character or whitespace forbidden');
+      }
+      if (!webhookUrlStr.startsWith('https://')) {
+        throw new Error('Scheme must be https://');
+      }
+      const authorityStart = 8; // 'https://'.length
+      const pathStart = webhookUrlStr.indexOf('/', authorityStart);
+      if (pathStart === -1) {
+        throw new Error('Path separator missing');
+      }
+      const rawAuthority = webhookUrlStr.slice(authorityStart, pathStart);
+      if (rawAuthority !== 'script.google.com') {
+        throw new Error('Authority must be exactly script.google.com');
+      }
+
       const webhookUrl = new URL(webhookUrlStr);
       if (webhookUrl.protocol !== 'https:' || webhookUrl.hostname !== 'script.google.com' || 
           webhookUrl.username || webhookUrl.password || webhookUrl.port || webhookUrl.search || webhookUrl.hash) {
