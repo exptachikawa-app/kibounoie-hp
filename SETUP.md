@@ -1,6 +1,6 @@
-# 問い合わせフォームセットアップ・運用手順書
+# 問い合わせフォームセットアップ・本番リリース運用手順書
 
-本ドキュメントは、生活介護 希望の家ウェブサイトにおける問い合わせフォーム機能（Cloudflare Workers + Google Apps Script + Cloudflare Turnstile）の構成、本番デプロイ手順、安全運用およびロールバック手順を定めたものです。
+本ドキュメントは、生活介護 希望の家ウェブサイトにおける問い合わせフォーム機能（Cloudflare Workers + Google Apps Script + Cloudflare Turnstile）の構成、本番リリース手順、安全運用およびロールバック手順を定めたものです。
 
 ---
 
@@ -28,53 +28,62 @@
 | `APPS_SCRIPT_SIGNING_SECRET` | Secret | GAS & Worker | 32文字以上の安全なランダム文字列（英数字記号、空白・タブ・改行不可）。HMAC署名生成および検証に使用。 |
 | `APPS_SCRIPT_WEBHOOK_URL` | Secret | Cloudflare Worker | GAS ウェブアプリURL（`https://script.google.com/macros/s/{deploymentId}/exec`）。明示的ポート（`:443`等を含む）、クエリ、ハッシュ、認証情報不可。 |
 | `TURNSTILE_SECRET_KEY` | Secret | Cloudflare Worker | Cloudflare Turnstileのサーバー検証用シークレットキー。 |
-| `ALLOWED_ORIGINS` | Env / Secret | Cloudflare Worker | CORS許可Originのカンマ区切りリスト（例: `https://kibounoie.swsc-ship.com`）。HTTPS必須（ローカル開発時のみ `http://localhost:*`, `http://127.0.0.1:*` 許容）。末尾スラッシュ、パス、クエリ、ワイルドカード禁止。 |
+| `ALLOWED_ORIGINS` | Variable / Secret | Cloudflare Worker | CORS許可Originのカンマ区切りリスト（例: `https://kibounoie.swsc-ship.com`）。HTTPS必須（ローカル開発時のみ `http://localhost:*`, `http://127.0.0.1:*` 許容）。末尾スラッシュ、パス、クエリ、ワイルドカード禁止。ワイルドカードやPreview URLを本番許可リストへ入れないこと。 |
 | Turnstile Site Key | Public Key | `public/contact.html` | Turnstileウィジェット表示用公開キー（`data-sitekey` 属性）。公開情報。 |
 
 ---
 
-## 3. デプロイとGit連携の重要仕様
+## 3. デプロイとGit連携・シークレット操作の重要仕様
 
-本プロジェクトのデプロイおよびシークレット設定を行う前に、以下の Cloudflare 公式仕様を必ず理解してください。
+本プロジェクトのデプロイおよびシークレット設定を行う前に、以下の仕様と動作原則を必ず理解してください。
 
 ### A. Git連携（Workers Builds）による自動本番デプロイ
 - 本リポジトリは Cloudflare Workers Builds と連携しています。
 - **本番ブランチ（Production branch）は `main`** です。
 - **PRを `main` ブランチへマージ（または `main` へ直接Push）すると、Cloudflare上で自動的に Production Build & Deploy が発火し、本番環境へ即時リリースされます。**
 - 非本番ブランチ（`feature/*` 等）へのPushは、非本番プレビュー版（`npx wrangler versions upload` 相当）のみを発火させます。
-- **したがって、PRのマージは単なるGit操作ではなく、本番リリースそのものです。マージ前にすべての本番前提条件（Secrets設定、GASデプロイ、Site Key反映）が完了している必要があります。**
-- 通常の本番コードリリース経路は「`main` へのPRマージによる自動デプロイ」であり、手動 `wrangler deploy` は二重実行を避けるため通常運用では実行しません（緊急時の代替手段としてのみ使用）。
+- **したがって、PRのマージは単なるGit操作ではなく、本番リリース操作そのものです。マージ前にすべての本番前提条件が完了している必要があります。**
+- 通常の本番コードリリース経路は「`main` へのPRマージによる自動デプロイ」であり、二重実行を防ぐため手動 `wrangler deploy` は重複実行しません。
 
-### B. `wrangler secret put` の即時デプロイ副作用
-- Cloudflare公式仕様において、`wrangler secret put <KEY>` は単にシークレットを保存するだけのコマンドではありません。
-- **`wrangler secret put` を実行すると、新しい Worker Version が即座に作成され、100% の本番トラフィックへ即時デプロイ（Promotion）されます。**
-- 3つのシークレットを1件ずつ `wrangler secret put` した場合、部分設定状態の中間バージョンが順次本番へデプロイされます（Worker側の Fail-Closed 実装により外部誤送信は防がれますが、本番バージョンが切り替わる事実は変わりません）。
-- したがって、シークレットの設定・変更は「事前準備」ではなく「本番デプロイ操作」として事前承認の上で実施してください。
+### B. Secret操作方式の区別と注意点
 
-### C. 安全なシークレット設定の選択肢
-本番環境にシークレットを設定・更新する際は、次のいずれかの方式を選択します。
+#### 1) 即時デプロイ方式 (`wrangler secret put` / `wrangler secret bulk`)
+- `wrangler secret put <KEY>` や `wrangler secret bulk <FILE>` は、単にシークレットを保存するだけの操作ではありません。
+- **実行すると新しい Worker Version が即座に作成され、100% の本番トラフィックへ即時デプロイ（Promotion）されます。**
+- したがって、本番変更の事前承認なしに実行してはなりません。また、1件ずつ実行すると部分設定された中間バージョンが順次本番へデプロイされるため、後述のVersion準備方式の利用を推奨します。
 
-#### 選択肢 1: `wrangler secret put`（標準方式）
-- コマンドを実行し、プロンプトに対象シークレットの値を安全に入力します。
+#### 2) Version準備方式 (`wrangler versions secret bulk` / `wrangler versions upload`)
+- 複数のシークレットを一つのバージョンへまとめ、本番昇格前に確認する方式です。
+- 個別の `versions secret put` を順次実行するのではなく、一括設定コマンドの使用を推奨します:
   ```bash
-  npx wrangler secret put TURNSTILE_SECRET_KEY
-  npx wrangler secret put APPS_SCRIPT_SIGNING_SECRET
-  npx wrangler secret put APPS_SCRIPT_WEBHOOK_URL
+  # 推奨例: シークレット定義ファイルを指定して新バージョンを作成
+  npx wrangler versions secret bulk <SECURE_FILE>
   ```
-- 各実行が新バージョンの即時デプロイを伴うことを認識した上で実施してください。
+  または、コード・静的アセットとシークレットを同一バージョンに含める場合:
+  ```bash
+  npx wrangler versions upload --secrets-file <SECURE_FILE>
+  ```
+- **重要注意事項**:
+  - `<SECURE_FILE>` は必ず Git 管理外（`.gitignore` 対象）に配置してください。
+  - ファイル名やシークレット値を PR、Issue、ログ、画面キャプチャへ掲載しないでください。
+  - 実行後は `<SECURE_FILE>` を安全かつ確実に削除してください。
+  - シークレット値をコマンドライン引数へ直接渡さないでください。
+  - 作成された Version ID を記録し、binding名のみを確認してください（シークレット値は出力しない）。
+  - Version作成と本番昇格（Production deployment: `wrangler versions deploy`）は別々の承認対象として扱ってください。
+  - 未デプロイVersionのシークレットが、後続のGit自動ビルドへ自動継承されると仮定しないでください。
 
-#### 選択肢 2: Version ワークフロー（一括設定方式）
-- Wrangler の Versions API を利用してシークレットを定義したバージョンを作成し、後から本番昇格（Deploy）させる方式です。
-  - 例: `npx wrangler versions secret put` 等を利用してバージョンを準備し、準備完了後に `npx wrangler versions deploy` で本番へ反映。
-  - ローカルシークレットファイルを使用する場合は、絶対にGit管理外（`.gitignore` 対象）に置き、ログやPRに含めず、使用後直ちに安全に削除してください。
+### C. プレビュー環境の仕様と注意事項
+- Cloudflare Workers のプレビューURL（`*.workers.dev`）は、アクセス制限が明示的に設定されていない限り、インターネットから公開アクセス可能です。
+- Worker Version はコード、静的アセット、Bindings（Secretsを含む）の完全な状態を表します。
+- 将来 Worker にシークレットが設定された後に作成されるプレビュー環境での予期せぬ本番GAS送信を防ぐため、`ALLOWED_ORIGINS` による制限（プレビューOriginを除外）、または環境分離を徹底してください。
 
 ---
 
-## 4. 本番デプロイ手順（推奨実行順序）
+## 4. 本番リリース運用手順（5段階フェーズ）
 
-本番稼働を開始する際は、必ず以下の順序で作業を実施してください。
+本番稼働を開始する際は、必ず以下の5段階フェーズを順に実施してください。
 
-### ステップ 1: Google Apps Script (GAS) の準備とデプロイ
+### Phase 1: Google Apps Script (GAS) 準備
 1. 管理者アカウントで Google Apps Script プロジェクトを新規作成します。
 2. `google-apps-script/Code.gs` の内容をスクリプトエディタに配置します。
 3. **プロジェクトの設定 -> スクリプトプロパティ** に以下を追加します:
@@ -83,74 +92,92 @@
 4. **デプロイ -> 新しいデプロイ -> 種類の選択: ウェブアプリ** を選択:
    - 次のユーザーとして実行: **「自分」**
    - アクセスできるユーザー: **「全員」**
-5. 発行されたウェブアプリURL（`https://script.google.com/macros/s/{deploymentId}/exec`）を取得します。
+5. 発行されたウェブアプリURL（`https://script.google.com/macros/s/{deploymentId}/exec`）を取得し、安全に記録します。
+6. URL形式、アクセス権限、実行ユーザー設定を2名体制で相互確認します。
 
-### ステップ 2: Cloudflare Turnstile ウィジェットの作成
+### Phase 2: Cloudflare Turnstile 準備
 1. Cloudflare ダッシュボード -> Turnstile にて新しいウィジェットを作成します。
-   - ドメイン: 本番ドメイン（例: `kibounoie.swsc-ship.com`）および必要に応じてプレビュードメインを登録
+   - ホスト名: 本番ドメイン（例: `kibounoie.swsc-ship.com`）を登録
    - ウィジェットモード: Managed または Non-interactive
-2. 発行された **Site Key** を取得します。
-3. 発行された **Secret Key** を控えます。
+   - ※プレビューホストを許可する場合は、本番許可とは分けて管理します。
+2. 発行された **Site Key**（公開値）を取得します。
+3. 発行された **Secret Key**（機密値）を安全に控えます。
+4. `public/contact.html` の `data-sitekey` に本番 Site Key を設定したコミットを作成し、PRレビューを行います（Secret Key をHTMLに記載してはなりません）。
 
-### ステップ 3: 正しい Site Key の反映とPR準備
-1. `public/contact.html` の `data-sitekey` にステップ2で取得した本番 Site Key を設定します（Site Keyは公開情報です。Secret KeyをHTMLに記載しないでください）。
-2. 変更をコミットし、PRの更新・レビューを行います。
+### Phase 3: Cloudflare Worker Binding 準備
+1. 4つの設定値（`TURNSTILE_SECRET_KEY`, `APPS_SCRIPT_SIGNING_SECRET`, `APPS_SCRIPT_WEBHOOK_URL`, `ALLOWED_ORIGINS`）の正式値を承認します。
+2. 署名シークレット（`APPS_SCRIPT_SIGNING_SECRET`）が GAS 側と Worker 側で完全一致していることを確認します。
+3. 第3章BのVersion準備方式（`npx wrangler versions secret bulk <SECURE_FILE>` 等）を用い、一つのVersionへシークレットをまとめます。
+4. 生成された Version ID と binding 名のみを記録します（シークレット値は出力・記録しない）。
+5. **この段階では Production へ昇格（Deploy）しません。**
 
-### ステップ 4: Cloudflare Worker へのシークレット登録
-ステップ3の選択肢1（または2）に従い、Worker環境へ3つのシークレット（`TURNSTILE_SECRET_KEY`, `APPS_SCRIPT_SIGNING_SECRET`, `APPS_SCRIPT_WEBHOOK_URL`）および `ALLOWED_ORIGINS` を設定します。
+### Phase 4: リリースゲート（Release Gate）
+以下の条件が **すべて** 揃うまで、PR のマージ（本番デプロイ）を厳格に禁止します:
+- [ ] 人手によるコードレビューの承認（Human code review approval）
+- [ ] 本番デプロイ計画および実施日時の承認（Production deployment plan approval）
+- [ ] GAS のデプロイ完了および `/exec` URL の確定
+- [ ] Turnstile 本番ウィジェットの作成完了
+- [ ] `public/contact.html` への本番 Site Key の反映およびレビュー済みであること
+- [ ] Worker の必要な4つの binding 名（`TURNSTILE_SECRET_KEY`, `APPS_SCRIPT_SIGNING_SECRET`, `APPS_SCRIPT_WEBHOOK_URL`, `ALLOWED_ORIGINS`）がすべて確認済みであること
+- [ ] `ALLOWED_ORIGINS` の正式値（本番カスタムドメインOrigin）の確認済みであること
+- [ ] 署名シークレットの一致確認済みであること
+- [ ] TAPテスト 48/48 PASS（Worker: 21, GAS: 18, Frontend: 9）
+- [ ] Secret Scanner 19/19 PASS および ワークスペース内未許可シークレット 0件・読込エラー 0件
+- [ ] アセット参照検証 332/332 PASS および 境界テスト 7/7 PASS
+- [ ] HMAC-SHA256 相互検証 PASS
+- [ ] `npx wrangler deploy --dry-run` が Exit Code 0 であること
+- [ ] 非本番プレビュー環境の GET/HEAD 導通確認 PASS
+- [ ] 残存 BLOCKER: 0件、残存 MAJOR: 0件
+- [ ] 本番リリース担当者による明示的なマージ承認
+- [ ] マージにより自動本番デプロイが発火することへの関係者の明示承認
+- [ ] ロールバック先となる現在稼働中の安定本番 Version ID の記録完了
 
-### ステップ 5: 本番リリース直前ゲート（Production Release Gate）
-マージ直前に以下をすべて確認し、本番リリース担当者の明示的な承認を得てください:
-- [ ] PRの全コードレビューが承認されていること
-- [ ] GitHub checks（Workers Builds 等）が全件 Success であること
-- [ ] コンフリクトがなく、`auto-merge` が無効（null）であること
-- [ ] GASウェブアプリがデプロイ済みで、URL形式が正しいこと
-- [ ] GASスクリプトプロパティに `APPS_SCRIPT_SIGNING_SECRET` が設定済みであること
-- [ ] Worker側に3つのシークレットが登録済みであること
-- [ ] `public/contact.html` の Site Key が有効な公開キーになっていること
-- [ ] `ALLOWED_ORIGINS` に本番Originが含まれていること
-- [ ] 現在稼働中の安定本番 Version ID を記録していること（ロールバック用）
-- [ ] **PRを `main` へマージすることにより、自動的に本番デプロイが発火することを関係者が明示承認していること**
+### Phase 5: 本番リリース（Production Release）
+> **注意**: 本フェーズはリリースの事前承認後にのみ実施する手順であり、開発フェーズでは実行しません。
 
-### ステップ 6: PRのマージ（本番自動デプロイの発火）
-GitHub上で PR を `main` ブランチへマージします。Cloudflare Workers Builds により本番デプロイが自動実行されます。
-
-### ステップ 7: WAF レート制限の設定
-Cloudflare ダッシュボード -> **Security -> WAF -> Rate Limiting Rules** にて、`/api/contact` に対するPOSTリクエストのレート制限（例: 1つのIPアドレスあたり1分間に5回まで等）を設定してください。
-
----
-
-## 5. 本番リリース後確認手順（Post-Release Verification）
-
-本番デプロイ完了後、以下の検証を順次実施してください。
-
-1. **デプロイ状態の確認**:
-   - Cloudflare ダッシュボードで Workers Builds のビルドステータスが Success となり、マージコミットの SHA で本番 Version が作成・昇格されたことを確認。
-   - 本番カスタムドメインおよびルートが正しく関連付けられていることを確認。
-2. **静的ページ・アセット導通確認 (GET)**:
-   - トップページ (`/`)、問い合わせページ (`/contact.html`)、CSS、JS、画像が HTTP 200 で返却され、文字化け（U+FFFD）がないことを確認。
-   - Turnstile ウィジェットが正常にロード・表示されることを確認。
-3. **本番フォーム実送信確認 (POST)**:
-   - **個人情報（氏名、私用メールアドレス、電話番号等）を含まない承認済みテストデータ** を用い、本番フォームからテスト送信を1回のみ実施。
-   - 送信成功メッセージが表示されること、および Gmail 宛先へのメール配信を確認。
-   - 送信直後に同一内容で再送信を試み、二重送信防止（重複抑止）が機能することを確認。
-4. **ログ安全性確認**:
-   - Cloudflare Workers のログおよび GAS の実行ログを確認し、テストデータや個人情報（PII）、シークレットが平文出力されていないことを確認。
-
----
-
-## 6. プレビュー環境の仕様と注意事項
-
-1. **プレビューURLの公開性**:
-   - Cloudflare Workers のプレビューURL（`*.workers.dev`）は、アクセス制限（Cloudflare Access等）が明示的に設定されていない限り、インターネットからアクセス可能です。
-2. **Preview Version と Secrets の関係**:
-   - Worker Version はコード、静的アセット、Bindings（Secretsを含む）の完全なスナップショットです。
-   - 監査時点のプレビュー版（Secrets未設定時）は Fail-Closed により外部送信を行いませんが、将来 Worker にシークレットが設定された後に生成された Version や環境設定によっては、プレビュー環境でもシークレットがバインドされる可能性があります。
-   - プレビュー環境からの予期せぬ本番GAS送信を防ぐため、`ALLOWED_ORIGINS` による制限（プレビューOriginを除外）、または環境の完全分離（ステージング用GAS/Turnstileの利用）を徹底してください。
+1. 承認された手順に基づき、Worker bindings を本番環境へ反映します。
+2. binding 名と本番状態を確認します。
+3. PR #1 を `main` ブランチへマージします。
+4. Cloudflare Workers Builds の Production Build & Deploy が完了したことを確認します。
+5. Production commit SHA と Cloudflare Version/Deployment ID を記録します。
+6. 本番環境の GET/HEAD 導通確認（静的アセット、`/contact.html`、Turnstile表示、文字化けなし）を実施します。
+7. **本番フォームの導通確認 (POST)**:
+   - **実在利用者の個人情報を含まない承認済みテストデータ** を使用します。
+   - API POST は重複送信確認を含めて **最大2回** 実施します:
+     - 1回目: 正常送信テスト（送信成功メッセージの表示、および Gmail 宛先へのメール配信1通を確認）
+     - 2回目: 同一リクエストでの重複送信抑止テスト（二重送信防止機能によりメール配信が抑止されることを確認）
+   - ※実際のメール配送が厳密に **1通のみ** であることを確認します。
+   - テスト完了後、受信したテストメールを適切に削除します。
+8. Cloudflare Workers および GAS のログを確認し、個人情報（PII）やシークレットが出力されていないことを確認します。
+9. Cloudflare ダッシュボード -> **Security -> WAF -> Rate Limiting Rules** にて、`/api/contact` に対するPOSTリクエストのレート制限ルールを設定・有効化します。
 
 ---
 
-## 7. 二重送信防止（冪等性）と制限事項
+## 5. ロールバック手順
+
+1. **事前準備**:
+   - マージ作業前に、現在安定稼働している本番 Version ID を必ず記録しておきます。安定Versionが不明な場合は作業を開始してはなりません。
+2. **ロールバックの実行原則**:
+   - ロールバックは本番環境のトラフィックを過去の Version ID へ即座に切り替える本番変更操作です。事前承認なしに実行してはなりません。
+3. **ロールバックコマンド例**:
+   ```bash
+   # 特定の安定稼働バージョンへ100%トラフィックを即時切り替え
+   npx wrangler versions deploy <PREVIOUS_VERSION_ID>@100%
+   ```
+   または
+   ```bash
+   npx wrangler rollback [DEPLOYMENT_ID]
+   ```
+4. **ロールバックの制約事項と外部リソース**:
+   - Worker のロールバックを実行しても、GAS、Turnstile、外部シークレットの設定は自動的には元に戻りません。
+   - 削除・変更された binding 先リソースがある場合、過去バージョンへのロールバックが正常に動作しない可能性があります。
+   - HMAC Secret 不一致等の障害時は、外部送信を即座に遮断（GASウェブアプリの非公開化またはWorkerルート無効化）した上で復旧順序を決定してください。
+5. **ロールバック後確認**:
+   - ロールバック後、静的ページの GET/HEAD 導通、API の Fail-Closed 動作、およびログの安全性を確認します。
+
+---
+
+## 6. 二重送信防止（冪等性）と制限事項
 
 1. **ベストエフォートな重複排除**:
    - フロントエンドで送信ごとに UUID v4 (`submissionId`) を生成し、GAS側で入力内容のハッシュ (`idempotencyHash`) とともに `CacheService`（保持期間: 6時間）に登録します。
@@ -164,34 +191,7 @@ Cloudflare ダッシュボード -> **Security -> WAF -> Rate Limiting Rules** �
 
 ---
 
-## 8. セキュリティ・運用保守ガイドライン
-
-1. **個人情報 (PII) の保護**:
-   - Cloudflare Workers のログおよび Apps Script の実行ログに、名前、メールアドレス、電話番号、問い合わせ本文を出力しないこと。
-2. **シークレットのローテーション手順**:
-   - `APPS_SCRIPT_SIGNING_SECRET` を更新する場合:
-     1. GASのスクリプトプロパティの値を新シークレットに変更し、新バージョンをデプロイ。
-     2. 直ちに `npx wrangler secret put APPS_SCRIPT_SIGNING_SECRET` で Worker 側を新シークレットに更新。
-     3. ※一時的に鍵不一致が発生した場合は Worker が 500 (`SERVER_CONFIG_ERROR`) または GAS が `INVALID_SIGNATURE` で安全に拒否します。
-3. **障害時の緊急停止・ロールバック手順**:
-   - **緊急停止**:
-     - GASのデプロイをアーカイブまたはアクセス権を「自分のみ」に変更する、あるいは Cloudflare ダッシュボードで Worker ルートを無効化することで即座に外部送信を遮断できます。
-   - **ロールバック**:
-     - ロールバックは本番環境のトラフィックを過去の Version ID へ即座に切り替える操作です。事前承認なしに実行しないでください。
-     - Wrangler CLI によるロールバック実行例:
-       ```bash
-       # 特定の安定稼働バージョンへ100%トラフィックを即時切り替え
-       npx wrangler versions deploy <PREVIOUS_VERSION_ID>@100%
-       ```
-       または
-       ```bash
-       npx wrangler rollback [DEPLOYMENT_ID]
-       ```
-     - ※Worker のロールバックを行っても、GAS、Turnstile、外部シークレットの設定は自動的には戻りません。外部リソースの整合性を確認してください。
-
----
-
-## 9. 静的アセット数について
+## 7. 静的アセット数について
 - ファイルシステム上の実ファイル数: **29件**（HTML: 10, CSS: 1, JS: 1, 画像/ファビコン: 17）
 - Wranglerデプロイ時表示エントリ数: **32件**
   - `WRANGLER_LOG=debug` による実行ログにより、実ファイル29件に加えて `/css`, `/images`, `/js` の3ディレクトリエントリが資産一覧に含められて32件と報告されていることが確認されています。
