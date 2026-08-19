@@ -1,0 +1,9 @@
+﻿.dev.vars
+.env
+.env.*
+node_modules/
+.wrangler/
+kibounoie-hp.git/
+*.log
+
+/dist/

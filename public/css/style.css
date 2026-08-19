@@ -1791,3 +1791,49 @@ button.gallery-item:focus-visible {
   outline: 3px solid var(--color-main-deep, #005a9e);
   outline-offset: 4px;
 }
+
+/* ==========================================
+   Form Alerts
+========================================== */
+.form-alert {
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.form-alert-error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+.form-alert-success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+.consent-group {
+  margin-top: 30px;
+  margin-bottom: 30px;
+  text-align: left;
+}
+.consent-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+.consent-label input[type="checkbox"] {
+  margin-top: 5px;
+  width: 18px;
+  height: 18px;
+}
+.turnstile-group {
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: center;
+}
+.btn-contact:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
