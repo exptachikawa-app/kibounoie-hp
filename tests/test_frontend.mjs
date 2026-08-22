@@ -589,98 +589,149 @@ test('Frontend: FAQ accordion HTML semantics and ARIA relationships', () => {
 });
 
 test('Frontend: FAQ accordion JavaScript state and ARIA synchronization', () => {
-  class MockClassList {
-    constructor() {
-      this.classes = new Set();
-    }
-    add(c) { this.classes.add(c); }
-    remove(c) { this.classes.delete(c); }
-    contains(c) { return this.classes.has(c); }
-    toggle(c, force) {
-      if (typeof force === 'boolean') {
-        if (force) this.classes.add(c);
-        else this.classes.delete(c);
-        return force;
-      }
-      if (this.classes.has(c)) {
-        this.classes.delete(c);
-        return false;
-      }
-      this.classes.add(c);
-      return true;
-    }
-  }
+  const origDocument = globalThis.document;
+  const origFormData = globalThis.FormData;
+  const origFetch = globalThis.fetch;
+  const origIntersectionObserver = globalThis.IntersectionObserver;
 
-  class MockAccordionHeader {
-    constructor(contentElement = null) {
-      this.classList = new MockClassList();
-      this.attributes = new Map();
-      this.nextElementSibling = contentElement;
-      this.listeners = {};
+  try {
+    class MockClassList {
+      constructor(initialClasses = []) {
+        this.classes = new Set(initialClasses);
+      }
+      add(c) { this.classes.add(c); }
+      remove(c) { this.classes.delete(c); }
+      contains(c) { return this.classes.has(c); }
+      toggle(c, force) {
+        if (typeof force === 'boolean') {
+          if (force) this.classes.add(c);
+          else this.classes.delete(c);
+          return force;
+        }
+        if (this.classes.has(c)) {
+          this.classes.delete(c);
+          return false;
+        }
+        this.classes.add(c);
+        return true;
+      }
     }
-    setAttribute(name, val) { this.attributes.set(name, String(val)); }
-    getAttribute(name) { return this.attributes.get(name); }
-    addEventListener(event, handler) {
-      if (!this.listeners[event]) this.listeners[event] = [];
-      this.listeners[event].push(handler);
-    }
-    click() {
-      if (this.listeners['click']) {
-        for (const h of this.listeners['click']) {
-          h();
+
+    class MockAccordionHeader {
+      constructor(contentElement = null) {
+        this.classList = new MockClassList();
+        this.attributes = new Map();
+        this.nextElementSibling = contentElement;
+        this.listeners = {};
+      }
+      setAttribute(name, val) { this.attributes.set(name, String(val)); }
+      getAttribute(name) { return this.attributes.get(name); }
+      addEventListener(event, handler) {
+        if (!this.listeners[event]) this.listeners[event] = [];
+        this.listeners[event].push(handler);
+      }
+      click() {
+        if (this.listeners['click']) {
+          for (const h of this.listeners['click']) {
+            h();
+          }
         }
       }
     }
-  }
 
-  class MockAccordionContent {
-    constructor() {
-      this.classList = new MockClassList();
+    class MockAccordionContent {
+      constructor(initialClasses = []) {
+        this.classList = new MockClassList(initialClasses);
+      }
     }
+
+    // Mock Elements
+    // Case A: Standard initially-closed FAQ item
+    const content1 = new MockAccordionContent();
+    const header1 = new MockAccordionHeader(content1);
+
+    // Case B: Initially-open FAQ item
+    const content2 = new MockAccordionContent(['is-open']);
+    const header2 = new MockAccordionHeader(content2);
+
+    // Case C: Null nextElementSibling (orphan header)
+    const header3 = new MockAccordionHeader(null);
+
+    const docListeners = {};
+    globalThis.document = {
+      getElementById: () => null,
+      querySelectorAll: (selector) => {
+        if (selector === '.accordion-header') {
+          return [header1, header2, header3];
+        }
+        return [];
+      },
+      addEventListener: (event, handler) => {
+        if (!docListeners[event]) docListeners[event] = [];
+        docListeners[event].push(handler);
+      },
+      body: {
+        style: {}
+      }
+    };
+
+    globalThis.IntersectionObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    };
+
+    // Load and execute ACTUAL public/js/main.js
+    const mainJs = fs.readFileSync('public/js/main.js', 'utf8');
+    const fn = new Function(mainJs);
+    fn();
+
+    // Trigger DOMContentLoaded in case anything is registered inside it
+    if (docListeners['DOMContentLoaded']) {
+      for (const h of docListeners['DOMContentLoaded']) {
+        h();
+      }
+    }
+
+    // --- Verification A: Standard closed FAQ ---
+    // Initial closed state
+    assert.strictEqual(header1.getAttribute('aria-expanded'), 'false', 'Initial aria-expanded must be "false"');
+    assert.strictEqual(header1.classList.contains('is-active'), false, 'Initial header must not have is-active');
+    assert.strictEqual(content1.classList.contains('is-open'), false, 'Initial content must not have is-open');
+
+    // First click -> Open
+    header1.click();
+    assert.strictEqual(header1.getAttribute('aria-expanded'), 'true', 'First click must set aria-expanded to "true"');
+    assert.strictEqual(header1.classList.contains('is-active'), true, 'First click must add is-active to header');
+    assert.strictEqual(content1.classList.contains('is-open'), true, 'First click must add is-open to content');
+
+    // Second click -> Close
+    header1.click();
+    assert.strictEqual(header1.getAttribute('aria-expanded'), 'false', 'Second click must set aria-expanded to "false"');
+    assert.strictEqual(header1.classList.contains('is-active'), false, 'Second click must remove is-active from header');
+    assert.strictEqual(content1.classList.contains('is-open'), false, 'Second click must remove is-open from content');
+
+    // --- Verification B: Initially open FAQ ---
+    assert.strictEqual(header2.getAttribute('aria-expanded'), 'true', 'Pre-opened item must initialize aria-expanded to "true"');
+    assert.strictEqual(header2.classList.contains('is-active'), true, 'Pre-opened item must initialize with is-active');
+    assert.strictEqual(content2.classList.contains('is-open'), true, 'Pre-opened item content must have is-open');
+
+    // Click to close
+    header2.click();
+    assert.strictEqual(header2.getAttribute('aria-expanded'), 'false', 'Clicking pre-opened item must set aria-expanded to "false"');
+    assert.strictEqual(header2.classList.contains('is-active'), false, 'Clicking pre-opened item must remove is-active');
+    assert.strictEqual(content2.classList.contains('is-open'), false, 'Clicking pre-opened item must remove is-open');
+
+    // --- Verification C: Null nextElementSibling safety ---
+    assert.doesNotThrow(() => {
+      header3.click();
+    }, 'Clicking header with null nextElementSibling must not throw');
+
+  } finally {
+    globalThis.document = origDocument;
+    globalThis.FormData = origFormData;
+    globalThis.fetch = origFetch;
+    globalThis.IntersectionObserver = origIntersectionObserver;
   }
-
-  // Setup handler logic matching main.js
-  const setupAccordion = (header) => {
-    const content = header.nextElementSibling;
-    if (!content) return;
-
-    const initialOpen = content.classList.contains('is-open');
-    header.classList.toggle('is-active', initialOpen);
-    header.setAttribute('aria-expanded', String(initialOpen));
-
-    header.addEventListener('click', () => {
-      const isOpen = content.classList.toggle('is-open');
-      header.classList.toggle('is-active', isOpen);
-      header.setAttribute('aria-expanded', String(isOpen));
-    });
-  };
-
-  // Test Case 1: Initial closed state -> click to open -> click to close
-  const content1 = new MockAccordionContent();
-  const header1 = new MockAccordionHeader(content1);
-
-  setupAccordion(header1);
-  assert.strictEqual(header1.getAttribute('aria-expanded'), 'false', 'Initial aria-expanded must be "false"');
-  assert.strictEqual(header1.classList.contains('is-active'), false, 'Initial header must not have is-active');
-  assert.strictEqual(content1.classList.contains('is-open'), false, 'Initial content must not have is-open');
-
-  // First click (Open)
-  header1.click();
-  assert.strictEqual(header1.getAttribute('aria-expanded'), 'true', 'First click must set aria-expanded to "true"');
-  assert.strictEqual(header1.classList.contains('is-active'), true, 'First click must add is-active to header');
-  assert.strictEqual(content1.classList.contains('is-open'), true, 'First click must add is-open to content');
-
-  // Second click (Close)
-  header1.click();
-  assert.strictEqual(header1.getAttribute('aria-expanded'), 'false', 'Second click must set aria-expanded to "false"');
-  assert.strictEqual(header1.classList.contains('is-active'), false, 'Second click must remove is-active from header');
-  assert.strictEqual(content1.classList.contains('is-open'), false, 'Second click must remove is-open from content');
-
-  // Test Case 2: Null nextElementSibling does not throw
-  const orphanHeader = new MockAccordionHeader(null);
-  assert.doesNotThrow(() => {
-    setupAccordion(orphanHeader);
-    orphanHeader.click();
-  }, 'Accordion setup with null nextElementSibling must not throw');
 });
 
