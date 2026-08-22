@@ -390,7 +390,10 @@ test('Frontend: contact.html DOM structure, form elements, and main.js contract'
   // Buttons & Messages
   assert.ok(content.includes('id="submitBtn"'));
   assert.ok(content.includes('id="form-error-message"'));
+  assert.ok(content.includes('role="alert"'), 'form-error-message must have role="alert"');
   assert.ok(content.includes('id="form-success-message"'));
+  assert.ok(content.includes('role="status"'), 'form-success-message must have role="status"');
+  assert.ok(content.includes('tabindex="-1"'), 'form-success-message must have tabindex="-1"');
 
   // Labels matching controls
   assert.ok(content.includes('for="name"'));
@@ -524,5 +527,160 @@ test('Frontend: Internal page links are root-relative and extensionless across a
     const oldHtmlLinkMatches = content.match(/href="[a-zA-Z0-9_-]+\.html(#.*?)?"/g);
     assert.strictEqual(oldHtmlLinkMatches, null, `${filename} must not contain any relative .html links, found: ${oldHtmlLinkMatches}`);
   }
+});
+
+test('Frontend: FAQ accordion HTML semantics and ARIA relationships', () => {
+  const faqPath = 'public/faq.html';
+  assert.ok(fs.existsSync(faqPath), 'public/faq.html must exist');
+  const html = fs.readFileSync(faqPath, 'utf8');
+
+  // Verify 4 accordion items
+  const itemMatches = [...html.matchAll(/<div\s+class="accordion-item">([\s\S]*?)<\/div>\s*<\/div>/gi)];
+  assert.strictEqual(itemMatches.length, 4, 'public/faq.html must contain exactly 4 accordion-item elements');
+
+  // Verify headers and panels
+  const buttonMatches = [...html.matchAll(/<button([^>]*)>([\s\S]*?)<\/button>/gi)].filter(m => m[1].includes('accordion-header'));
+  const panelMatches = [...html.matchAll(/<div([^>]*)>([\s\S]*?)<\/div>/gi)].filter(m => m[1].includes('accordion-content'));
+
+  assert.strictEqual(buttonMatches.length, 4, 'Must have exactly 4 accordion-header buttons');
+  assert.strictEqual(panelMatches.length, 4, 'Must have exactly 4 accordion-content panels');
+
+  const buttonIds = new Set();
+  const panelIds = new Set();
+
+  for (let i = 0; i < 4; i++) {
+    const btnAttrs = buttonMatches[i][1];
+    const panelAttrs = panelMatches[i][1];
+
+    // Check button attributes
+    assert.ok(btnAttrs.includes('type="button"'), `FAQ button ${i + 1} must have type="button"`);
+
+    const btnIdMatch = btnAttrs.match(/id="([^"]+)"/);
+    assert.ok(btnIdMatch, `FAQ button ${i + 1} must have an id`);
+    const btnId = btnIdMatch[1];
+    assert.strictEqual(buttonIds.has(btnId), false, `FAQ button ID ${btnId} must be unique`);
+    buttonIds.add(btnId);
+
+    const ariaExpandedMatch = btnAttrs.match(/aria-expanded="([^"]+)"/);
+    assert.ok(ariaExpandedMatch, `FAQ button ${i + 1} must have aria-expanded`);
+    assert.strictEqual(ariaExpandedMatch[1], 'false', `FAQ button ${i + 1} must initially have aria-expanded="false"`);
+
+    const ariaControlsMatch = btnAttrs.match(/aria-controls="([^"]+)"/);
+    assert.ok(ariaControlsMatch, `FAQ button ${i + 1} must have aria-controls`);
+    const controlsId = ariaControlsMatch[1];
+
+    // Check panel attributes
+    const panelIdMatch = panelAttrs.match(/id="([^"]+)"/);
+    assert.ok(panelIdMatch, `FAQ panel ${i + 1} must have an id`);
+    const panelId = panelIdMatch[1];
+    assert.strictEqual(panelIds.has(panelId), false, `FAQ panel ID ${panelId} must be unique`);
+    panelIds.add(panelId);
+
+    assert.ok(panelAttrs.includes('role="region"'), `FAQ panel ${i + 1} must have role="region"`);
+
+    const ariaLabelledbyMatch = panelAttrs.match(/aria-labelledby="([^"]+)"/);
+    assert.ok(ariaLabelledbyMatch, `FAQ panel ${i + 1} must have aria-labelledby`);
+    const labelledbyId = ariaLabelledbyMatch[1];
+
+    // Cross reference 1-to-1 integrity
+    assert.strictEqual(controlsId, panelId, `Button aria-controls (${controlsId}) must match panel id (${panelId})`);
+    assert.strictEqual(labelledbyId, btnId, `Panel aria-labelledby (${labelledbyId}) must match button id (${btnId})`);
+  }
+});
+
+test('Frontend: FAQ accordion JavaScript state and ARIA synchronization', () => {
+  class MockClassList {
+    constructor() {
+      this.classes = new Set();
+    }
+    add(c) { this.classes.add(c); }
+    remove(c) { this.classes.delete(c); }
+    contains(c) { return this.classes.has(c); }
+    toggle(c, force) {
+      if (typeof force === 'boolean') {
+        if (force) this.classes.add(c);
+        else this.classes.delete(c);
+        return force;
+      }
+      if (this.classes.has(c)) {
+        this.classes.delete(c);
+        return false;
+      }
+      this.classes.add(c);
+      return true;
+    }
+  }
+
+  class MockAccordionHeader {
+    constructor(contentElement = null) {
+      this.classList = new MockClassList();
+      this.attributes = new Map();
+      this.nextElementSibling = contentElement;
+      this.listeners = {};
+    }
+    setAttribute(name, val) { this.attributes.set(name, String(val)); }
+    getAttribute(name) { return this.attributes.get(name); }
+    addEventListener(event, handler) {
+      if (!this.listeners[event]) this.listeners[event] = [];
+      this.listeners[event].push(handler);
+    }
+    click() {
+      if (this.listeners['click']) {
+        for (const h of this.listeners['click']) {
+          h();
+        }
+      }
+    }
+  }
+
+  class MockAccordionContent {
+    constructor() {
+      this.classList = new MockClassList();
+    }
+  }
+
+  // Setup handler logic matching main.js
+  const setupAccordion = (header) => {
+    const content = header.nextElementSibling;
+    if (!content) return;
+
+    const initialOpen = content.classList.contains('is-open');
+    header.classList.toggle('is-active', initialOpen);
+    header.setAttribute('aria-expanded', String(initialOpen));
+
+    header.addEventListener('click', () => {
+      const isOpen = content.classList.toggle('is-open');
+      header.classList.toggle('is-active', isOpen);
+      header.setAttribute('aria-expanded', String(isOpen));
+    });
+  };
+
+  // Test Case 1: Initial closed state -> click to open -> click to close
+  const content1 = new MockAccordionContent();
+  const header1 = new MockAccordionHeader(content1);
+
+  setupAccordion(header1);
+  assert.strictEqual(header1.getAttribute('aria-expanded'), 'false', 'Initial aria-expanded must be "false"');
+  assert.strictEqual(header1.classList.contains('is-active'), false, 'Initial header must not have is-active');
+  assert.strictEqual(content1.classList.contains('is-open'), false, 'Initial content must not have is-open');
+
+  // First click (Open)
+  header1.click();
+  assert.strictEqual(header1.getAttribute('aria-expanded'), 'true', 'First click must set aria-expanded to "true"');
+  assert.strictEqual(header1.classList.contains('is-active'), true, 'First click must add is-active to header');
+  assert.strictEqual(content1.classList.contains('is-open'), true, 'First click must add is-open to content');
+
+  // Second click (Close)
+  header1.click();
+  assert.strictEqual(header1.getAttribute('aria-expanded'), 'false', 'Second click must set aria-expanded to "false"');
+  assert.strictEqual(header1.classList.contains('is-active'), false, 'Second click must remove is-active from header');
+  assert.strictEqual(content1.classList.contains('is-open'), false, 'Second click must remove is-open from content');
+
+  // Test Case 2: Null nextElementSibling does not throw
+  const orphanHeader = new MockAccordionHeader(null);
+  assert.doesNotThrow(() => {
+    setupAccordion(orphanHeader);
+    orphanHeader.click();
+  }, 'Accordion setup with null nextElementSibling must not throw');
 });
 

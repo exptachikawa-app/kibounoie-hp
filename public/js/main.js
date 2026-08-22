@@ -40,14 +40,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // FAQアコーディオンの開閉処理
   const accordionHeaders = document.querySelectorAll('.accordion-header');
   accordionHeaders.forEach(header => {
+    const content = header.nextElementSibling;
+    if (!content) return;
+
+    const initialOpen = content.classList.contains('is-open');
+    header.classList.toggle('is-active', initialOpen);
+    header.setAttribute('aria-expanded', String(initialOpen));
+
     header.addEventListener('click', () => {
-      header.classList.toggle('is-active');
-      const content = header.nextElementSibling;
-      if (content.classList.contains('is-open')) {
-        content.classList.remove('is-open');
-      } else {
-        content.classList.add('is-open');
-      }
+      const isOpen = content.classList.toggle('is-open');
+      header.classList.toggle('is-active', isOpen);
+      header.setAttribute('aria-expanded', String(isOpen));
     });
   });
 
