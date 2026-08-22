@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';
+import path from 'node:path';
 
 // Helper class for mock form
 class MockElement {
@@ -344,7 +345,7 @@ test('Frontend: contact.html DOM structure, form elements, and main.js contract'
   // Consent & Privacy policy link
   assert.ok(content.includes('id="consent"'));
   assert.ok(content.includes('name="consent"'));
-  assert.ok(content.includes('<a href="privacy.html" target="_blank" rel="noopener noreferrer">個人情報保護方針</a>'));
+  assert.ok(content.includes('<a href="/privacy" target="_blank" rel="noopener noreferrer">個人情報保護方針</a>'));
 
   // Turnstile widget
   assert.ok(content.includes('class="cf-turnstile"'));
@@ -443,3 +444,85 @@ test('Frontend: Validation contract alignment between Frontend, Worker, and GAS'
   assert.match(contactHtml, /class="cf-turnstile"[^>]*data-action="contact"/);
   assert.ok(workerSrc.includes("turnstileOutcome.action !== 'contact'"), 'Worker must strictly require action === contact');
 });
+
+test('Frontend: Canonical self-referencing tags across all 10 HTML pages', () => {
+  const expectedCanonicalMap = {
+    'index.html': 'https://kibounoie-akiruno.org/',
+    'about.html': 'https://kibounoie-akiruno.org/about',
+    'service.html': 'https://kibounoie-akiruno.org/service',
+    'facility.html': 'https://kibounoie-akiruno.org/facility',
+    'guide.html': 'https://kibounoie-akiruno.org/guide',
+    'activities.html': 'https://kibounoie-akiruno.org/activities',
+    'faq.html': 'https://kibounoie-akiruno.org/faq',
+    'access.html': 'https://kibounoie-akiruno.org/access',
+    'contact.html': 'https://kibounoie-akiruno.org/contact',
+    'privacy.html': 'https://kibounoie-akiruno.org/privacy'
+  };
+
+  for (const [filename, expectedUrl] of Object.entries(expectedCanonicalMap)) {
+    const filePath = path.join('public', filename);
+    assert.ok(fs.existsSync(filePath), `${filePath} must exist`);
+    const content = fs.readFileSync(filePath, 'utf8');
+
+    const canonicalMatch = content.match(/<link\s+rel="canonical"\s+href="([^"]+)"\s*\/?>/);
+    assert.ok(canonicalMatch, `${filename} must contain a canonical link tag`);
+    assert.strictEqual(canonicalMatch[1], expectedUrl, `${filename} canonical href must be ${expectedUrl}`);
+    assert.strictEqual(canonicalMatch[1].includes('www.'), false, `${filename} canonical must be non-www`);
+    assert.ok(canonicalMatch[1].startsWith('https://'), `${filename} canonical must be https`);
+  }
+});
+
+test('Frontend: sitemap.xml structure and published page URL integrity', () => {
+  const sitemapPath = 'public/sitemap.xml';
+  assert.ok(fs.existsSync(sitemapPath), 'public/sitemap.xml must exist');
+  const content = fs.readFileSync(sitemapPath, 'utf8');
+
+  assert.ok(content.startsWith('<?xml version="1.0" encoding="UTF-8"?>'), 'sitemap.xml must have XML declaration');
+  assert.ok(content.includes('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'), 'sitemap.xml must have standard urlset xmlns');
+
+  const locMatches = [...content.matchAll(/<loc>(.*?)<\/loc>/g)].map(m => m[1]);
+  assert.strictEqual(locMatches.length, 10, 'sitemap.xml must contain exactly 10 canonical page URLs');
+
+  const expectedUrls = [
+    'https://kibounoie-akiruno.org/',
+    'https://kibounoie-akiruno.org/about',
+    'https://kibounoie-akiruno.org/service',
+    'https://kibounoie-akiruno.org/facility',
+    'https://kibounoie-akiruno.org/guide',
+    'https://kibounoie-akiruno.org/activities',
+    'https://kibounoie-akiruno.org/faq',
+    'https://kibounoie-akiruno.org/access',
+    'https://kibounoie-akiruno.org/contact',
+    'https://kibounoie-akiruno.org/privacy'
+  ];
+
+  for (const url of expectedUrls) {
+    assert.ok(locMatches.includes(url), `sitemap.xml must include ${url}`);
+  }
+});
+
+test('Frontend: robots.txt structure and crawl configuration', () => {
+  const robotsPath = 'public/robots.txt';
+  assert.ok(fs.existsSync(robotsPath), 'public/robots.txt must exist');
+  const content = fs.readFileSync(robotsPath, 'utf8');
+
+  assert.ok(content.includes('User-agent: *'), 'robots.txt must define User-agent: *');
+  assert.ok(content.includes('Allow: /'), 'robots.txt must allow root /');
+  assert.ok(content.includes('Disallow: /api/'), 'robots.txt must disallow /api/');
+  assert.ok(content.includes('Sitemap: https://kibounoie-akiruno.org/sitemap.xml'), 'robots.txt must specify Sitemap URL');
+});
+
+test('Frontend: Internal page links are root-relative and extensionless across all HTML files', () => {
+  const htmlFiles = fs.readdirSync('public').filter(f => f.endsWith('.html'));
+  assert.strictEqual(htmlFiles.length, 10, 'Must have 10 HTML files in public/');
+
+  for (const filename of htmlFiles) {
+    const filePath = path.join('public', filename);
+    const content = fs.readFileSync(filePath, 'utf8');
+
+    // Ensure no old relative .html links remain in href attributes
+    const oldHtmlLinkMatches = content.match(/href="[a-zA-Z0-9_-]+\.html(#.*?)?"/g);
+    assert.strictEqual(oldHtmlLinkMatches, null, `${filename} must not contain any relative .html links, found: ${oldHtmlLinkMatches}`);
+  }
+});
+

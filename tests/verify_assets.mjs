@@ -93,7 +93,16 @@ function classifyAndVerify(rawRef, sourceFile) {
     return;
   }
 
-  if (fs.existsSync(result.resolvedTarget)) {
+  let targetExists = fs.existsSync(result.resolvedTarget);
+  if (!targetExists && !path.extname(result.resolvedTarget)) {
+    if (fs.existsSync(result.resolvedTarget + '.html')) {
+      targetExists = true;
+    } else if (fs.existsSync(path.join(result.resolvedTarget, 'index.html'))) {
+      targetExists = true;
+    }
+  }
+
+  if (targetExists) {
     verified.push(result);
   } else {
     missing.push({ source: sourceFile, ref: result.ref, resolvedTarget: result.resolvedTarget, reason: 'File Not Found' });
