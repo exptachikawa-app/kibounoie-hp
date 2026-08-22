@@ -538,6 +538,16 @@ test('Frontend: FAQ accordion HTML semantics and ARIA relationships', () => {
   const itemMatches = [...html.matchAll(/<div\s+class="accordion-item">([\s\S]*?)<\/div>\s*<\/div>/gi)];
   assert.strictEqual(itemMatches.length, 4, 'public/faq.html must contain exactly 4 accordion-item elements');
 
+  // Verify headings
+  const headingMatches = [...html.matchAll(/<div\s+role="heading"\s+aria-level="2">([\s\S]*?)<\/div>/gi)];
+  assert.strictEqual(headingMatches.length, 4, 'public/faq.html must contain exactly 4 div[role="heading"][aria-level="2"] elements');
+
+  // Verify each heading wraps only the button
+  for (let i = 0; i < 4; i++) {
+    const headingInner = headingMatches[i][1].trim();
+    assert.ok(headingInner.startsWith('<button') && headingInner.endsWith('</button>'), `Heading ${i + 1} must directly and solely wrap the accordion button`);
+  }
+
   // Verify headers and panels
   const buttonMatches = [...html.matchAll(/<button([^>]*)>([\s\S]*?)<\/button>/gi)].filter(m => m[1].includes('accordion-header'));
   const panelMatches = [...html.matchAll(/<div([^>]*)>([\s\S]*?)<\/div>/gi)].filter(m => m[1].includes('accordion-content'));
@@ -582,6 +592,10 @@ test('Frontend: FAQ accordion HTML semantics and ARIA relationships', () => {
     assert.ok(ariaLabelledbyMatch, `FAQ panel ${i + 1} must have aria-labelledby`);
     const labelledbyId = ariaLabelledbyMatch[1];
 
+    const ariaHiddenMatch = panelAttrs.match(/aria-hidden="([^"]+)"/);
+    assert.ok(ariaHiddenMatch, `FAQ panel ${i + 1} must have aria-hidden`);
+    assert.strictEqual(ariaHiddenMatch[1], 'true', `FAQ panel ${i + 1} must initially have aria-hidden="true"`);
+
     // Cross reference 1-to-1 integrity
     assert.strictEqual(controlsId, panelId, `Button aria-controls (${controlsId}) must match panel id (${panelId})`);
     assert.strictEqual(labelledbyId, btnId, `Panel aria-labelledby (${labelledbyId}) must match button id (${btnId})`);
@@ -618,14 +632,16 @@ test('Frontend: FAQ accordion JavaScript state and ARIA synchronization', () => 
     }
 
     class MockAccordionHeader {
-      constructor(contentElement = null) {
+      constructor(ariaControls = null) {
         this.classList = new MockClassList();
         this.attributes = new Map();
-        this.nextElementSibling = contentElement;
+        if (ariaControls) {
+          this.attributes.set('aria-controls', ariaControls);
+        }
         this.listeners = {};
       }
       setAttribute(name, val) { this.attributes.set(name, String(val)); }
-      getAttribute(name) { return this.attributes.get(name); }
+      getAttribute(name) { return this.attributes.get(name) || null; }
       addEventListener(event, handler) {
         if (!this.listeners[event]) this.listeners[event] = [];
         this.listeners[event].push(handler);
@@ -642,27 +658,43 @@ test('Frontend: FAQ accordion JavaScript state and ARIA synchronization', () => 
     class MockAccordionContent {
       constructor(initialClasses = []) {
         this.classList = new MockClassList(initialClasses);
+        this.attributes = new Map();
       }
+      setAttribute(name, val) { this.attributes.set(name, String(val)); }
+      getAttribute(name) { return this.attributes.get(name) || null; }
     }
 
     // Mock Elements
-    // Case A: Standard initially-closed FAQ item
+    // Case 1 & 2 & 3: Standard initially-closed FAQ item
     const content1 = new MockAccordionContent();
-    const header1 = new MockAccordionHeader(content1);
+    const header1 = new MockAccordionHeader('faq-panel-1');
 
-    // Case B: Initially-open FAQ item
+    // Case 4: Initially-open FAQ item
     const content2 = new MockAccordionContent(['is-open']);
-    const header2 = new MockAccordionHeader(content2);
+    const header2 = new MockAccordionHeader('faq-panel-2');
 
-    // Case C: Null nextElementSibling (orphan header)
-    const header3 = new MockAccordionHeader(null);
+    // Case 5: Missing aria-controls attribute
+    const header3_no_attr = new MockAccordionHeader(null);
+
+    // Case 6: aria-controls referencing non-existent panel
+    const header4_missing_target = new MockAccordionHeader('non-existent-panel');
+
+    // Case 7: Independent item for multi-open test
+    const content5 = new MockAccordionContent();
+    const header5_indep = new MockAccordionHeader('faq-panel-5');
+
+    const panelElements = {
+      'faq-panel-1': content1,
+      'faq-panel-2': content2,
+      'faq-panel-5': content5
+    };
 
     const docListeners = {};
     globalThis.document = {
-      getElementById: () => null,
+      getElementById: (id) => panelElements[id] || null,
       querySelectorAll: (selector) => {
         if (selector === '.accordion-header') {
-          return [header1, header2, header3];
+          return [header1, header2, header3_no_attr, header4_missing_target, header5_indep];
         }
         return [];
       },
@@ -693,39 +725,64 @@ test('Frontend: FAQ accordion JavaScript state and ARIA synchronization', () => 
       }
     }
 
-    // --- Verification A: Standard closed FAQ ---
-    // Initial closed state
+    // --- Verification 1: Standard closed FAQ initial state ---
     assert.strictEqual(header1.getAttribute('aria-expanded'), 'false', 'Initial aria-expanded must be "false"');
+    assert.strictEqual(content1.getAttribute('aria-hidden'), 'true', 'Initial aria-hidden must be "true"');
     assert.strictEqual(header1.classList.contains('is-active'), false, 'Initial header must not have is-active');
     assert.strictEqual(content1.classList.contains('is-open'), false, 'Initial content must not have is-open');
 
-    // First click -> Open
+    // --- Verification 2: First click -> Open ---
     header1.click();
     assert.strictEqual(header1.getAttribute('aria-expanded'), 'true', 'First click must set aria-expanded to "true"');
+    assert.strictEqual(content1.getAttribute('aria-hidden'), 'false', 'First click must set aria-hidden to "false"');
     assert.strictEqual(header1.classList.contains('is-active'), true, 'First click must add is-active to header');
     assert.strictEqual(content1.classList.contains('is-open'), true, 'First click must add is-open to content');
 
-    // Second click -> Close
+    // --- Verification 3: Second click -> Close ---
     header1.click();
     assert.strictEqual(header1.getAttribute('aria-expanded'), 'false', 'Second click must set aria-expanded to "false"');
+    assert.strictEqual(content1.getAttribute('aria-hidden'), 'true', 'Second click must set aria-hidden to "true"');
     assert.strictEqual(header1.classList.contains('is-active'), false, 'Second click must remove is-active from header');
     assert.strictEqual(content1.classList.contains('is-open'), false, 'Second click must remove is-open from content');
 
-    // --- Verification B: Initially open FAQ ---
+    // --- Verification 4: Initially open FAQ ---
     assert.strictEqual(header2.getAttribute('aria-expanded'), 'true', 'Pre-opened item must initialize aria-expanded to "true"');
+    assert.strictEqual(content2.getAttribute('aria-hidden'), 'false', 'Pre-opened item must initialize aria-hidden to "false"');
     assert.strictEqual(header2.classList.contains('is-active'), true, 'Pre-opened item must initialize with is-active');
     assert.strictEqual(content2.classList.contains('is-open'), true, 'Pre-opened item content must have is-open');
 
-    // Click to close
+    // Click to close pre-opened item
     header2.click();
     assert.strictEqual(header2.getAttribute('aria-expanded'), 'false', 'Clicking pre-opened item must set aria-expanded to "false"');
+    assert.strictEqual(content2.getAttribute('aria-hidden'), 'true', 'Clicking pre-opened item must set aria-hidden to "true"');
     assert.strictEqual(header2.classList.contains('is-active'), false, 'Clicking pre-opened item must remove is-active');
     assert.strictEqual(content2.classList.contains('is-open'), false, 'Clicking pre-opened item must remove is-open');
 
-    // --- Verification C: Null nextElementSibling safety ---
+    // --- Verification 5: Missing aria-controls attribute safety ---
     assert.doesNotThrow(() => {
-      header3.click();
-    }, 'Clicking header with null nextElementSibling must not throw');
+      header3_no_attr.click();
+    }, 'Header without aria-controls attribute must not throw');
+
+    // --- Verification 6: Missing panel in DOM safety ---
+    assert.doesNotThrow(() => {
+      header4_missing_target.click();
+    }, 'Header with non-existent panel target must not throw');
+
+    // --- Verification 7: Multiple independent items state preservation ---
+    // Re-open header1
+    header1.click();
+    assert.strictEqual(header1.getAttribute('aria-expanded'), 'true');
+    assert.strictEqual(content1.getAttribute('aria-hidden'), 'false');
+    // Verify header5_indep is still closed
+    assert.strictEqual(header5_indep.getAttribute('aria-expanded'), 'false');
+    assert.strictEqual(content5.getAttribute('aria-hidden'), 'true');
+    // Open header5_indep
+    header5_indep.click();
+    assert.strictEqual(header5_indep.getAttribute('aria-expanded'), 'true');
+    assert.strictEqual(content5.getAttribute('aria-hidden'), 'false');
+    // Both header1 and header5_indep remain open simultaneously
+    assert.strictEqual(header1.getAttribute('aria-expanded'), 'true');
+    assert.strictEqual(content1.getAttribute('aria-hidden'), 'false');
 
   } finally {
     globalThis.document = origDocument;
