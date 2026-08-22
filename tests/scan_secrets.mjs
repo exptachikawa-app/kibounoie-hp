@@ -19,7 +19,8 @@ export const ALLOWLIST_STRINGS = new Set([
   '1x00000000000000000000AA', // Dummy Cloudflare Turnstile SiteKey
   '9'.repeat(100), // Test string for 100+ digit Content-Length
   'X-Permitted-Cross-Domain-Policies',
-  'x-permitted-cross-domain-policies'
+  'x-permitted-cross-domain-policies',
+  'sha256-/sEhTg6MOarI5GLSBqSnNXhPnk/TPYQoSQS23QPPxaQ='
 ]);
 
 function mask(str) {
