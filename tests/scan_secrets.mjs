@@ -36,7 +36,7 @@ const EXCLUDE_DIRS = new Set([
   '.temp_scan_fixture'
 ]);
 
-const BINARY_EXTS = new Set(['.ico', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.woff', '.woff2', '.ttf', '.pdf', '.zip']);
+const BINARY_EXTS = new Set(['.ico', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', '.woff', '.woff2', '.ttf', '.pdf', '.zip']);
 
 function isIgnoredNonSecret(token, content, matchIndex) {
   if (/^[-_=/]+$/.test(token)) return true;
@@ -47,7 +47,7 @@ function isIgnoredNonSecret(token, content, matchIndex) {
       return true;
     }
     const following = content.slice(matchIndex + token.length, matchIndex + token.length + 10);
-    if (/^\.(?:jpg|jpeg|png|gif|webp|svg|ico|html|css|js|mjs|json|jsonc|woff2?|ttf)\b/i.test(following)) {
+    if (/^\.(?:jpg|jpeg|png|gif|webp|avif|svg|ico|html|css|js|mjs|json|jsonc|woff2?|ttf)\b/i.test(following)) {
       return true;
     }
   }
