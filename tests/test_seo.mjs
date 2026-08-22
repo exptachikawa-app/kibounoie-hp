@@ -192,7 +192,8 @@ test('SEO: JSON-LD structured data is valid, byte-for-byte identical, and matche
   }
 
   // Calculate SHA-256 hash of JSON-LD content
-  const hash = crypto.createHash('sha256').update(firstJsonLdRaw, 'utf8').digest('base64');
+  const normalizedJsonLd = firstJsonLdRaw.replace(/\r\n/g, '\n');
+  const hash = crypto.createHash('sha256').update(normalizedJsonLd, 'utf8').digest('base64');
   const expectedHashToken = `'sha256-${hash}'`;
 
   // Verify hash is configured in public/_headers

@@ -278,8 +278,8 @@ test('Frontend: contact.html UTF-8 encoding, Japanese integrity, and mojibake pr
   }
 
   // 3. Title & description
-  assert.ok(content.includes('<title>お問い合わせ | 生活介護 希望の家 | 社会福祉法人SHIP</title>'));
-  assert.ok(content.includes('<meta name="description" content="生活介護 希望の家への見学予約やお問い合わせはこちらから。">'));
+  assert.ok(content.includes('<title>見学・お問い合わせ | 生活介護 希望の家 | 社会福祉法人SHIP</title>'));
+  assert.ok(content.includes('<meta name="description" content="生活介護 希望の家への見学予約、ご相談、各種お問い合わせはこちらから承ります。">'));
   assert.ok(content.includes('<meta charset="UTF-8">'));
   assert.ok(content.includes('<html lang="ja">'));
 
@@ -790,5 +790,70 @@ test('Frontend: FAQ accordion JavaScript state and ARIA synchronization', () => 
     globalThis.fetch = origFetch;
     globalThis.IntersectionObserver = origIntersectionObserver;
   }
+});
+
+test('Activities: daily gallery remains primary after annual events removal', () => {
+  const filePath = path.join('public', 'activities.html');
+  assert.ok(fs.existsSync(filePath), 'public/activities.html must exist');
+  const html = fs.readFileSync(filePath, 'utf8');
+
+  // A. Deletion verification
+  assert.strictEqual(html.includes('年間行事（一例）'), false, 'Must not contain "年間行事（一例）"');
+  assert.strictEqual(html.includes('お花見、新入生歓迎会、散策'), false, 'Must not contain spring events');
+  assert.strictEqual(html.includes('七夕、夏祭り、かき氷作り'), false, 'Must not contain summer events');
+  assert.strictEqual(html.includes('ハロウィン、運動会、紅葉狩り'), false, 'Must not contain autumn events');
+  assert.strictEqual(html.includes('クリスマス会、初詣、節分、ひな祭り'), false, 'Must not contain winter events');
+  assert.strictEqual(html.includes('毎月のお誕生日会'), false, 'Must not contain birthday party note');
+  assert.strictEqual(html.includes('event-list'), false, 'Must not contain event-list class');
+
+  // B. Maintenance verification
+  assert.match(html, /<h1 class="page-title">活動の様子<\/h1>/, 'Must contain page title "活動の様子"');
+  assert.match(html, /<h2 class="section-title">日々の様子<\/h2>/, 'Must contain section title "日々の様子"');
+
+  const dailyHeadings = html.match(/<h2 class="section-title">日々の様子<\/h2>/g) || [];
+  assert.strictEqual(dailyHeadings.length, 1, 'Must contain exactly 1 "日々の様子" section title');
+
+  assert.ok(html.includes('class="gallery-grid"'), 'Must contain gallery-grid');
+
+  const galleryItems = html.match(/class="gallery-item lightbox-trigger"/g) || [];
+  assert.strictEqual(galleryItems.length, 8, 'Must contain exactly 8 gallery items with lightbox trigger');
+
+  const ariaLabels = html.match(/aria-label="活動写真を拡大表示"/g) || [];
+  assert.strictEqual(ariaLabels.length, 8, 'Must contain exactly 8 aria-label="活動写真を拡大表示"');
+
+  const avifSources = html.match(/<source\s+srcset="images\/photo-[^"]+\.avif"\s+type="image\/avif">/g) || [];
+  assert.strictEqual(avifSources.length, 8, 'Must contain exactly 8 AVIF gallery sources');
+
+  const webpSources = html.match(/<source\s+srcset="images\/photo-[^"]+\.webp"\s+type="image\/webp">/g) || [];
+  assert.strictEqual(webpSources.length, 8, 'Must contain exactly 8 WebP gallery sources');
+
+  const jpegImgs = html.match(/<img\s+decoding="async"\s+src="images\/photo-[^"]+\.jpg"/g) || [];
+  assert.strictEqual(jpegImgs.length, 8, 'Must contain exactly 8 JPEG fallback images');
+
+  // C. Primary structure verification
+  const activitiesSectionMatch = html.match(/<section class="section activities[^"]*">([\s\S]*?)<\/section>/);
+  assert.ok(activitiesSectionMatch, 'Must contain activities section');
+  const sectionInner = activitiesSectionMatch[1];
+
+  const firstH2Match = sectionInner.match(/<h2 class="section-title">([\s\S]*?)<\/h2>/);
+  assert.ok(firstH2Match, 'Activities section must contain an h2');
+  assert.strictEqual(firstH2Match[1], '日々の様子', 'First h2 in activities section must be "日々の様子"');
+
+  assert.strictEqual(sectionInner.includes('content-box'), false, 'Activities section must not contain empty or residual content-box');
+
+  // D. SEO description verification
+  const newDesc = '生活介護 希望の家での日々の活動や創作活動、音楽、運動などの様子をご紹介します。';
+  const oldDesc = '生活介護 希望の家での日々の活動やイベント、創作活動の様子をご紹介します。';
+
+  assert.strictEqual(html.includes(oldDesc), false, 'Must not contain old description');
+
+  const descMetaMatch = html.match(new RegExp(`<meta\\s+name="description"\\s+content="${newDesc}">`));
+  assert.ok(descMetaMatch, 'Must contain new meta description');
+
+  const ogDescMatch = html.match(new RegExp(`<meta\\s+property="og:description"\\s+content="${newDesc}">`));
+  assert.ok(ogDescMatch, 'Must contain new og:description');
+
+  const twDescMatch = html.match(new RegExp(`<meta\\s+name="twitter:description"\\s+content="${newDesc}">`));
+  assert.ok(twDescMatch, 'Must contain new twitter:description');
 });
 
