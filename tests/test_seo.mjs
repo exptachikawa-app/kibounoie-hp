@@ -17,18 +17,44 @@ const HTML_FILES = [
   'privacy.html'
 ];
 
+function getJpegDimensions(buffer) {
+  let i = 0;
+  if (buffer.readUInt16BE(0) !== 0xFFD8) return null; // Not JPEG
+  i += 2;
+  while (i < buffer.length) {
+    const marker = buffer.readUInt16BE(i);
+    i += 2;
+    if (marker >= 0xFFC0 && marker <= 0xFFC3) {
+      const height = buffer.readUInt16BE(i + 3);
+      const width = buffer.readUInt16BE(i + 5);
+      return { width, height };
+    } else {
+      const len = buffer.readUInt16BE(i);
+      i += len;
+    }
+  }
+  return null;
+}
+
 test('SEO: Exact 10 HTML pages exist in public/', () => {
   const files = fs.readdirSync('public').filter(f => f.endsWith('.html'));
   assert.strictEqual(files.length, 10, 'public/ must contain exactly 10 HTML files');
   assert.deepStrictEqual(files.sort(), HTML_FILES.slice().sort());
 });
 
-test('SEO: OGP & Twitter Card metadata across all 10 HTML pages', () => {
+test('SEO: OGP & Twitter Card metadata matches actual image dimensions and production domain', () => {
   const ogpImagesFound = new Set();
 
   for (const filename of HTML_FILES) {
     const filePath = path.join('public', filename);
     const html = fs.readFileSync(filePath, 'utf8');
+
+    // Ensure no duplicate/stale GitHub Pages domain is present in public HTML
+    assert.strictEqual(
+      html.includes('utility-s.github.io'),
+      false,
+      `${filename} must not contain stale GitHub Pages domain utility-s.github.io`
+    );
 
     // Canonical check
     const canonicalMatch = html.match(/<link\s+rel="canonical"\s+href="([^"]+)"/);
@@ -63,20 +89,33 @@ test('SEO: OGP & Twitter Card metadata across all 10 HTML pages', () => {
 
     const ogImage = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/);
     assert.ok(ogImage, `${filename} must have og:image`);
-    assert.ok(ogImage[1].startsWith('https://kibounoie-akiruno.org/images/'), `${filename} og:image must be absolute HTTPS`);
-    
-    // Verify local referenced file exists
+    assert.ok(ogImage[1].startsWith('https://kibounoie-akiruno.org/images/'), `${filename} og:image must be absolute HTTPS on production domain`);
+    assert.ok(ogImage[1].endsWith('.jpg') || ogImage[1].endsWith('.png'), `${filename} og:image must use crawlable JPEG/PNG fallback, not AVIF`);
+
+    // Verify local referenced file exists and get real dimensions
     const relImagePath = ogImage[1].replace('https://kibounoie-akiruno.org/', 'public/');
     assert.ok(fs.existsSync(relImagePath), `Referenced OGP image ${relImagePath} must exist`);
     ogpImagesFound.add(relImagePath);
 
+    const imageBuf = fs.readFileSync(relImagePath);
+    const actualDimensions = getJpegDimensions(imageBuf);
+    assert.ok(actualDimensions, `Unable to parse JPEG dimensions for ${relImagePath}`);
+
     const ogWidth = html.match(/<meta\s+property="og:image:width"\s+content="([^"]+)"/);
     assert.ok(ogWidth, `${filename} must have og:image:width`);
-    assert.strictEqual(ogWidth[1], '1200');
+    assert.strictEqual(
+      parseInt(ogWidth[1], 10),
+      actualDimensions.width,
+      `${filename} og:image:width (${ogWidth[1]}) must match actual image width (${actualDimensions.width})`
+    );
 
     const ogHeight = html.match(/<meta\s+property="og:image:height"\s+content="([^"]+)"/);
     assert.ok(ogHeight, `${filename} must have og:image:height`);
-    assert.strictEqual(ogHeight[1], '630');
+    assert.strictEqual(
+      parseInt(ogHeight[1], 10),
+      actualDimensions.height,
+      `${filename} og:image:height (${ogHeight[1]}) must match actual image height (${actualDimensions.height})`
+    );
 
     const ogAlt = html.match(/<meta\s+property="og:image:alt"\s+content="([^"]+)"/);
     assert.ok(ogAlt, `${filename} must have og:image:alt`);
@@ -97,6 +136,7 @@ test('SEO: OGP & Twitter Card metadata across all 10 HTML pages', () => {
     const twImage = html.match(/<meta\s+name="twitter:image"\s+content="([^"]+)"/);
     assert.ok(twImage, `${filename} must have twitter:image`);
     assert.strictEqual(twImage[1], ogImage[1]);
+    assert.ok(twImage[1].endsWith('.jpg') || twImage[1].endsWith('.png'), `${filename} twitter:image must use crawlable JPEG/PNG fallback`);
 
     const twAlt = html.match(/<meta\s+name="twitter:image:alt"\s+content="([^"]+)"/);
     assert.ok(twAlt, `${filename} must have twitter:image:alt`);
