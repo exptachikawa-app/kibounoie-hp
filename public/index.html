@@ -94,7 +94,11 @@
   <header class="header" id="js-header">
     <div class="header-inner">
       <div class="header-logo">
-        <a href="/" class="logo-link"><img src="images/logo-kibounoie.png" alt="生活介護 希望の家" class="header-logo-img"></a>
+        <a href="/" class="logo-link"><picture>
+            <source srcset="images/logo-kibounoie.avif" type="image/avif">
+            <source srcset="images/logo-kibounoie.webp" type="image/webp">
+            <img decoding="async" src="images/logo-kibounoie.png" alt="生活介護 希望の家" class="header-logo-img">
+          </picture></a>
       </div>
       <nav class="gnav" id="js-gnav">
         <ul class="gnav-list">
@@ -128,13 +132,25 @@
     <section class="hero">
       <div class="hero-slider" id="js-hero-slider">
         <div class="hero-slide is-active">
-          <img src="images/photo-facility-exterior.jpg" alt="希望の家の建物外観" width="800" height="533">
+          <picture>
+            <source srcset="images/photo-facility-exterior.avif" type="image/avif">
+            <source srcset="images/photo-facility-exterior.webp" type="image/webp">
+            <img fetchpriority="high" loading="eager" decoding="async" src="images/photo-facility-exterior.jpg" alt="希望の家の建物外観" width="800" height="533">
+          </picture>
         </div>
         <div class="hero-slide">
-          <img src="images/photo-creative-support-water.jpg" alt="職員と利用者が共同で創作活動に取り組む様子" width="800" height="533">
+          <picture>
+            <source srcset="images/photo-creative-support-water.avif" type="image/avif">
+            <source srcset="images/photo-creative-support-water.webp" type="image/webp">
+            <img loading="lazy" decoding="async" src="images/photo-creative-support-water.jpg" alt="職員と利用者が共同で創作活動に取り組む様子" width="800" height="533">
+          </picture>
         </div>
         <div class="hero-slide">
-          <img src="images/photo-group-exercise.jpg" alt="椅子に座って集団体操を行う様子" width="800" height="533">
+          <picture>
+            <source srcset="images/photo-group-exercise.avif" type="image/avif">
+            <source srcset="images/photo-group-exercise.webp" type="image/webp">
+            <img loading="lazy" decoding="async" src="images/photo-group-exercise.jpg" alt="椅子に座って集団体操を行う様子" width="800" height="533">
+          </picture>
         </div>
       </div>
       <div class="hero-dots" id="js-hero-dots">
@@ -169,7 +185,11 @@
               </div>
             </div>
             <div class="zigzag-img">
-              <img src="images/photo-facility-entrance.jpg" alt="希望の家の入口" loading="lazy" width="800" height="533">
+              <picture>
+            <source srcset="images/photo-facility-entrance.avif" type="image/avif">
+            <source srcset="images/photo-facility-entrance.webp" type="image/webp">
+            <img decoding="async" src="images/photo-facility-entrance.jpg" alt="希望の家の入口" loading="lazy" width="800" height="533">
+          </picture>
             </div>
           </div>
         </div>
@@ -275,16 +295,32 @@
         <div class="section-header"><span class="section-label">INFO</span><h2 class="section-title">日々の様子</h2></div>
         <div class="gallery-grid">
           <button type="button" class="gallery-item lightbox-trigger" aria-label="職員と利用者が向き合って活動する様子を拡大表示" data-lightbox-index="0">
-            <img src="images/photo-interaction-support.jpg" alt="職員と利用者が向き合って活動する様子" loading="lazy">
+            <picture>
+            <source srcset="images/photo-interaction-support.avif" type="image/avif">
+            <source srcset="images/photo-interaction-support.webp" type="image/webp">
+            <img decoding="async" src="images/photo-interaction-support.jpg" alt="職員と利用者が向き合って活動する様子" loading="lazy">
+          </picture>
           </button>
           <button type="button" class="gallery-item lightbox-trigger" aria-label="職員と利用者が創作活動に取り組む様子を拡大表示" data-lightbox-index="1">
-            <img src="images/photo-creative-support-water.jpg" alt="職員と利用者が共同で創作活動に取り組む様子" loading="lazy">
+            <picture>
+            <source srcset="images/photo-creative-support-water.avif" type="image/avif">
+            <source srcset="images/photo-creative-support-water.webp" type="image/webp">
+            <img decoding="async" src="images/photo-creative-support-water.jpg" alt="職員と利用者が共同で創作活動に取り組む様子" loading="lazy">
+          </picture>
           </button>
           <button type="button" class="gallery-item lightbox-trigger" aria-label="和太鼓の活動を拡大表示" data-lightbox-index="2">
-            <img src="images/photo-drum-activity.jpg" alt="和太鼓の活動を行う様子" loading="lazy">
+            <picture>
+            <source srcset="images/photo-drum-activity.avif" type="image/avif">
+            <source srcset="images/photo-drum-activity.webp" type="image/webp">
+            <img decoding="async" src="images/photo-drum-activity.jpg" alt="和太鼓の活動を行う様子" loading="lazy">
+          </picture>
           </button>
           <button type="button" class="gallery-item lightbox-trigger" aria-label="集団体操の様子を拡大表示" data-lightbox-index="3">
-            <img src="images/photo-group-exercise.jpg" alt="椅子に座って集団体操を行う様子" loading="lazy">
+            <picture>
+            <source srcset="images/photo-group-exercise.avif" type="image/avif">
+            <source srcset="images/photo-group-exercise.webp" type="image/webp">
+            <img decoding="async" src="images/photo-group-exercise.jpg" alt="椅子に座って集団体操を行う様子" loading="lazy">
+          </picture>
           </button>
         </div>
         <div class="btn-wrap">
@@ -341,7 +377,11 @@
     <div class="container">
             <div class="footer-top">
         <div class="footer-info">
-          <div class="footer-logo"><a href="/"><img src="images/logo-kibounoie.png" alt="生活介護 希望の家" class="footer-logo-img"></a></div>
+          <div class="footer-logo"><a href="/"><picture>
+            <source srcset="images/logo-kibounoie.avif" type="image/avif">
+            <source srcset="images/logo-kibounoie.webp" type="image/webp">
+            <img decoding="async" src="images/logo-kibounoie.png" alt="生活介護 希望の家" class="footer-logo-img">
+          </picture></a></div>
           <p class="footer-address">
             あきる野市障害者通所支援施設「希望の家」<br>
             〒190-0164 東京都あきる野市五日市374-5<br>

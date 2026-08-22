@@ -333,6 +333,16 @@ button {
 .hero-slide.is-active {
   opacity: 1;
 }
+.hero-slide picture,
+.split-image picture,
+.features-grid-2x2 .feature-card picture,
+.zigzag-img picture,
+.gallery-grid .lightbox-trigger picture,
+.access-photo-item picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
 .hero-slide img {
   width: 100%;
   height: 100%;
